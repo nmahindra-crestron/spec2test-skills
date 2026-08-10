@@ -31,9 +31,23 @@ You drive this through the Spec2Test engine tools — do not hand-create folders
 ## What this skill does
 
 1. Create a work unit (the engine mints the slug and folder, and makes it active).
-2. Produce `intake.md` from the template in one pass, marking every missing field `[GAP]`.
+2. Detect input mode (Jira key vs manual details), gather available context, and produce `intake.md`
+  from the template in one pass, marking every missing field `[GAP]`.
 3. Interview the user to resolve `[GAP]`s (critical ones first).
 4. Run **Gate 0** and interpret its tri-state result.
+
+## Input detection (required)
+
+Detect mode from the user's first message before drafting intake:
+
+- **Jira-key mode**: input includes a Jira key matching `[A-Z][A-Z0-9_]+-\d+`.
+- **Manual mode**: no Jira key is present.
+
+If both a Jira key and manual story text are present, ask the user which source should be primary
+for this intake session before proceeding.
+
+After initial prefill, both modes MUST follow the exact same lifecycle: persist intake, resolve
+`[GAP]`s via interview, re-persist with `force: true`, and run Gate 0.
 
 ## Step 1 — Create the work unit
 
@@ -53,12 +67,59 @@ Rules:
 
 - Populate every section from the user's text. Set `Date` to today and `Slug` to the unit's slug.
 - Any field or section with no information → write `[GAP]`. **Never leave a section blank.**
-- Jira: if the user pastes Jira content, map it into the sections; otherwise leave **Jira Metadata**
-  as `[GAP]`. (Live Jira fetch is not available — do not attempt network calls.)
+
+### Step 2A — Jira-key mode prefill
+
+When in Jira-key mode, call the configured Jira MCP tool with the issue key and extract available
+story data before filling intake.
+
+Mapping requirements:
+
+- **User Story**
+  - `Name` ← Jira summary (or `[GAP]`)
+  - `Number` ← Jira issue key
+- **Jira Metadata**
+  - `Issue Key`, `Status`, `Priority`, `Sprint`, `Labels`, `Components`, `Linked Issues` from Jira.
+  - **Do not extract personal identity fields** from Jira (`Assignee`, `Reporter`): leave those rows
+    as `[GAP]`.
+- **Description**
+  - Map Jira description body (or `[GAP]` if unavailable).
+- **Acceptance Criteria**
+  - Parse from description/comments only (never from custom fields) in this order:
+    1. sections titled `Acceptance Criteria`, `AC`, or `Definition of Done`
+    2. `Given/When/Then` blocks
+    3. numbered or bulleted criteria statements
+  - Normalize into checklist items.
+  - If no credible criteria can be extracted, set section to `[GAP]`.
+- **Design Document**
+  - Classify extracted references:
+    - attachment references → `Attachments`
+    - Confluence links → `Confluence Links`
+    - Figma links → `Figma Links`
+    - remaining spec/architecture links → `Spec Links`
+  - Missing subsections remain `[GAP]`.
+- **Existing Test Coverage**
+  - Populate `Existing Test Case References` from linked/mentioned test assets where available.
+  - Populate `Existing Test Cases` from freeform test details in description/comments where present.
+  - Populate `Known Coverage Gaps` for extracted acceptance criteria without matched test evidence.
+  - Use `[GAP]` when a subsection cannot be populated.
+
+For each Jira-derived value written into intake, include a provenance marker such as
+`[SOURCE: Jira ABC-123]`.
+
+### Step 2B — Manual mode prefill
+
+When in manual mode, populate intake from user-provided story details and mark unknowns as `[GAP]`.
 
 Persist it with `persist_artifact` — `stageId: "intake"`, `content: <the filled markdown>`. When you
 re-write `intake.md` on later turns (after interview answers), pass **`force: true`** so the engine
 accepts the update instead of returning `reconcile-required`.
+
+### Step 2C — Jira fallback behavior
+
+If Jira retrieval fails (invalid key, inaccessible issue, unauthorized, timeout, or tool error),
+present a short reason and continue in manual mode in the same session. Preserve already collected
+context and proceed with normal intake drafting/interview behavior.
 
 ## Step 3 — Intake completeness interview
 

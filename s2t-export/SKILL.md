@@ -35,8 +35,9 @@ Confirm the active unit's `test-cases.md` is ready to export:
 
 - Gate 2 is PASS or approved CONDITIONAL_PASS (the engine also blocks stage 4 and the export tool
   until this holds).
-- Every test case has the required fields (ID, Name, Feature Area, Repository Path, Scenario,
-  Requirement, Priority, Coverage Type, Coverage Intent, Preconditions, Steps, Expected Results).
+- Every test case has the required export-facing data for the approved xlsx layout (Test Case ID,
+  Name, User Story, Test Repository Path, Test Type, Feature Area, Requirement ID, Setup Details,
+  Pre-requisite, Purpose, Step Action, Expected Results).
 - Traceability is intact (each test case traces to REQ/BR/VR/approved source) and Coverage Intent is
   valid and matches its source.
 

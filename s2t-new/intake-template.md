@@ -17,12 +17,14 @@ Slug: <slug>
 | Issue Key | |
 | Status | |
 | Priority | |
-| Assignee | |
-| Reporter | |
+| Assignee | [GAP] |
+| Reporter | [GAP] |
 | Sprint | |
 | Labels | |
 | Components | |
 | Linked Issues | |
+
+<!-- Keep personal identity fields as [GAP] when sourcing from Jira. -->
 
 ## Description
 
@@ -43,6 +45,8 @@ Attachments
 Confluence Links
 Figma Links
 Spec Links
+
+<!-- Include [SOURCE: Jira ABC-123] markers for Jira-derived values where available. -->
 
 
 ## Comments / Q&A
@@ -65,6 +69,8 @@ Spec Links
 ### Known Coverage Gaps
 
 <!-- Areas known to be missing coverage -->
+
+- [GAP]
 
 ### Repository Path
 

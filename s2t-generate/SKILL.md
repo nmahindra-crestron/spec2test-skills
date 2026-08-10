@@ -50,6 +50,9 @@ Design discipline (authoritative):
 - **Exploratory / Hidden coverage** is tagged `EXPLORATORY`, never counts toward mandatory coverage,
   and never appears in the Traceability Matrix.
 - Test data must be concrete; expected results observable; steps reproducible.
+- Preserve the authored fields needed by the approved xlsx export: `User Story`, `Repository Path`,
+  `Test Type`, `Feature Area`, `Requirement(s)`, `Setup Details`, `Pre-requisite`, `Purpose`, and
+  a `Steps` table that keeps `Action` and `Expected Result` as distinct columns.
 
 **Formatting rule (parser-critical):** write each test case title as a plain `Name: <value>` at the
 **start of the line, with no bold markers** (never `**Name:**`). The export runner parses this label;

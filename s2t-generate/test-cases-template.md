@@ -76,12 +76,12 @@ Validation Rule(s):
 Coverage Intent: REQ | BR | VR | REGRESSION | RISK | EXPLORATORY | INTERACTION
 Priority:
 Risk:
-Coverage Type:
+Test Type:
 Tags:
-Setup Reference: SETUP-001
+Setup Details: SETUP-001
 Purpose:
 
-### Preconditions
+### Pre-requisite
 
 - Item
 
