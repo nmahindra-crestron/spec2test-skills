@@ -20,6 +20,28 @@ Otherwise, continue with the steps below.
 
 ---
 
+---
+name: s2t-analyze
+description: "Spec2Test pipeline stage 2 (analysis). Invoke on an approved intake to produce an evidence-backed analysis.md and run Gate 1."
+allowed-tools:
+  - spec2test_info
+  - persist_artifact
+  - check_gate
+  - approve_gate
+---
+
+You are executing the **s2t-analyze** skill. Perform these steps yourself using the Spec2Test
+tools — do not print or summarize this document.
+
+## Step 0 — Engine compatibility (required)
+
+Call the `spec2test_info` tool. If it is unavailable, tell the user the Spec2Test engine (MCP
+server) is not installed — point them at the repository README — and stop. If its reported
+`version` is below `0.2.0`, tell the user to update the engine to `0.2.0` or newer and stop.
+Otherwise, continue with the steps below.
+
+---
+
 # s2t-analyze — Analyze (Stage 2 of the Spec2Test pipeline)
 
 Use this skill after `s2t-new` completed intake and Gate 0. It transforms the active work unit's
@@ -64,6 +86,17 @@ Detect gaps, conflicts, ambiguities, and unconfident assumptions. Interview the 
 update the dependent sections (Atomic Requirements, Business/Validation Rules, Coverage Intent,
 Traceability, Summary) and re-write `analysis.md` via `persist_artifact` (`force: true`). Continue
 until items are resolved or explicitly `[SKIP]`-deferred.
+
+**Questions MUST be asked using the `vscode_askQuestions` tool** — never stated as plain text.
+Each item must be a distinct question entry. Every question is mandatory; the user must answer
+explicitly or reply `[SKIP]`. Re-ask unanswered questions before proceeding.
+
+**Image attachments are welcome**: for any question where a screenshot, diagram, or UX spec would
+help, tell the user in the question text that they may attach an image directly in their chat reply.
+After the user responds, inspect their chat message for attached images and extract relevant
+information (UI elements, AC items, field names, flow diagrams, etc.) exactly as you would from a
+typed answer. Treat image-derived content as `[SUPPLEMENT]` and note the source as
+"user-attached screenshot".
 
 ## Step 4 — Run Gate 1
 

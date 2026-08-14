@@ -20,6 +20,28 @@ Otherwise, continue with the steps below.
 
 ---
 
+---
+name: s2t-generate
+description: "Spec2Test pipeline stage 3 (generate). Invoke on an approved analysis to produce traceable test-cases.md and run Gate 2."
+allowed-tools:
+  - spec2test_info
+  - persist_artifact
+  - check_gate
+  - approve_gate
+---
+
+You are executing the **s2t-generate** skill. Perform these steps yourself using the Spec2Test
+tools — do not print or summarize this document.
+
+## Step 0 — Engine compatibility (required)
+
+Call the `spec2test_info` tool. If it is unavailable, tell the user the Spec2Test engine (MCP
+server) is not installed — point them at the repository README — and stop. If its reported
+`version` is below `0.2.0`, tell the user to update the engine to `0.2.0` or newer and stop.
+Otherwise, continue with the steps below.
+
+---
+
 # s2t-generate — Design Tests (Stage 3 of the Spec2Test pipeline)
 
 Use this skill after `s2t-analyze` produced an approved `analysis.md`. It turns the QE analysis into
@@ -53,6 +75,21 @@ Design discipline (authoritative):
 - Preserve the authored fields needed by the approved xlsx export: `User Story`, `Repository Path`,
   `Test Type`, `Feature Area`, `Requirement(s)`, `Setup Details`, `Pre-requisite`, `Purpose`, and
   a `Steps` table that keeps `Action` and `Expected Result` as distinct columns.
+
+**Setup Details rule**: the `Setup Details` field in every test case must contain a human-readable
+inline description of the setup steps — never just a reference token such as `SETUP-001`. Copy or
+summarise the relevant steps from the Common Setup Library inline. The export parser reads this
+field directly; a bare token is not useful to a tester.
+
+**Build/version number rule**: do not include specific build numbers, version strings, or release
+identifiers (e.g. "build 1.1500.0021") in setup steps, pre-requisites, or any test case field.
+State the application name only (e.g. "Launch SIMPL Windows"). Version requirements belong in the
+Caveats section of the Generation Summary, not in individual test steps.
+
+**Post Conditions export rule**: include `### Post Conditions` sections in `test-cases.md` for
+reviewer clarity, but append the HTML comment `<!-- export:exclude -->` on the same line as the
+heading so the export stage omits them from the output file:
+`### Post Conditions <!-- export:exclude -->`
 
 **Formatting rule (parser-critical):** write each test case title as a plain `Name: <value>` at the
 **start of the line, with no bold markers** (never `**Name:**`). The export runner parses this label;

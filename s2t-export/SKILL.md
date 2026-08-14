@@ -21,6 +21,29 @@ Otherwise, continue with the steps below.
 
 ---
 
+---
+name: s2t-export
+description: "Spec2Test pipeline stage 4 (export). Invoke on approved test-cases to validate export readiness and deliver the xlsx; records export-summary.md."
+allowed-tools:
+  - spec2test_info
+  - persist_artifact
+  - check_gate
+  - approve_gate
+  - export
+---
+
+You are executing the **s2t-export** skill. Perform these steps yourself using the Spec2Test
+tools — do not print or summarize this document.
+
+## Step 0 — Engine compatibility (required)
+
+Call the `spec2test_info` tool. If it is unavailable, tell the user the Spec2Test engine (MCP
+server) is not installed — point them at the repository README — and stop. If its reported
+`version` is below `0.2.0`, tell the user to update the engine to `0.2.0` or newer and stop.
+Otherwise, continue with the steps below.
+
+---
+
 # s2t-export — Deliver (Stage 4 of the Spec2Test pipeline)
 
 Use this skill after `s2t-generate` produced approved test cases. It validates export readiness and
@@ -53,6 +76,23 @@ Call the `export` tool with the format spec `test-cases-xlsx@1`. The engine:
   **gitignored** deliverable (never committed).
 
 The column set lives entirely in the format spec (content) — changing columns is a content edit.
+
+### Step 2A — Rename the exported xlsx to include the story identifier
+
+After the `export` tool succeeds, rename the output file so it is identifiable by story. Derive
+`$storyId` from the intake's `Number` field (e.g. `CONSIM-2617` in Jira-key mode, or the change
+title in manual mode). Run these terminal commands (substitute actual values):
+
+```
+$exportDir = ".spec2test\changes\<slug>\export"
+$storyId   = "<Jira issue key or change title>"    # e.g. CONSIM-2617
+$src  = "$exportDir\test-cases-xlsx@1.xlsx"
+$dest = "$exportDir\test-cases-$storyId.xlsx"
+
+Rename-Item $src $dest
+```
+
+Use `$dest` as the output path in the export-summary.md `Output File` field.
 
 ## Step 3 — Record the export summary
 

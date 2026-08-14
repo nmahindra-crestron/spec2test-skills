@@ -21,6 +21,29 @@ Otherwise, continue with the steps below.
 
 ---
 
+---
+name: s2t-new
+description: "Spec2Test pipeline stage 1 (intake). Invoke to start a new change: interview the user, produce a structured intake.md, and run Gate 0."
+allowed-tools:
+  - spec2test_info
+  - create_work_unit
+  - persist_artifact
+  - check_gate
+  - approve_gate
+---
+
+You are executing the **s2t-new** skill. Perform these steps yourself using the Spec2Test
+tools — do not print or summarize this document.
+
+## Step 0 — Engine compatibility (required)
+
+Call the `spec2test_info` tool. If it is unavailable, tell the user the Spec2Test engine (MCP
+server) is not installed — point them at the repository README — and stop. If its reported
+`version` is below `0.2.0`, tell the user to update the engine to `0.2.0` or newer and stop.
+Otherwise, continue with the steps below.
+
+---
+
 # s2t-new — Collect (Stage 1 of the Spec2Test pipeline)
 
 Use this skill to start the Spec2Test pipeline for a new user story or feature. It creates a
@@ -57,6 +80,28 @@ Call `create_work_unit` with that name as the `title`. The engine allocates a un
 form `YYYY-MM-DD-<6×[A-Z0-9]>`, creates `.spec2test/changes/<slug>/`, and sets it active. All
 subsequent tools act on this active unit. **Never invent a slug or path yourself.**
 
+### Step 1A — Rename the work unit folder (Jira-key mode only)
+
+After `create_work_unit` returns in Jira-key mode, rename the folder to append the Jira issue key
+so it is human-identifiable (e.g. `2026-08-14-LD0ULK-CONSIM-2617`). Do this immediately, before
+writing any artifacts, using these exact terminal commands (substitute actual values):
+
+```
+$oldSlug = "<slug returned by create_work_unit>"          # e.g. 2026-08-14-LD0ULK
+$jiraKey = "<Jira issue key>"                              # e.g. CONSIM-2617
+$base    = ".spec2test\changes"
+$newSlug = "$oldSlug-$jiraKey"
+
+Rename-Item "$base\$oldSlug" "$base\$newSlug"
+Set-Content ".spec2test\active" $newSlug -NoNewline
+$state = Get-Content "$base\$newSlug\state.json" | ConvertFrom-Json
+$state.slug = $newSlug
+$state | ConvertTo-Json -Depth 20 | Set-Content "$base\$newSlug\state.json"
+```
+
+Use `$newSlug` as the canonical slug for all subsequent references (intake `Slug:` field, artifact
+paths, etc.). In manual mode, skip this step — the engine slug is used as-is.
+
 ## Step 2 — Draft intake.md
 
 Fill this template from whatever the user provided, then write it:
@@ -85,12 +130,24 @@ Mapping requirements:
 - **Description**
   - Map Jira description body (or `[GAP]` if unavailable).
 - **Acceptance Criteria**
-  - Parse from description/comments only (never from custom fields) in this order:
-    1. sections titled `Acceptance Criteria`, `AC`, or `Definition of Done`
-    2. `Given/When/Then` blocks
-    3. numbered or bulleted criteria statements
-  - Normalize into checklist items.
-  - If no credible criteria can be extracted, set section to `[GAP]`.
+  - Check all of the following sources in order — use the **first** that yields content (OR logic):
+    1. **Known AC custom fields** — check these Jira custom fields first, as Jira instances often
+       store the Acceptance Criteria section as a dedicated custom field rather than inline in the
+       description: `customfield_10095`, `customfield_10031`, or any custom field whose key or
+       rendered label contains `Acceptance Criteria`, `AC`, or `Definition of Done`.
+    2. **Named section anywhere in the description** — any section titled `Acceptance Criteria`,
+       `AC`, `Definition of Done`, or a close variant, regardless of where it appears in the
+       description body (beginning, middle, or end, including after sections like "Behavioral
+       Differences" or "Clarifications").
+    3. **Given/When/Then blocks** anywhere in the description or comments.
+    4. **Any numbered or bulleted statements** anywhere in the description body — including bullets
+       describing behavior, clarifications, or requirements even without a named heading. Any
+       substantive bulleted or numbered content qualifies; do not require "criteria" language.
+    5. **Comment fallback** — bulleted or numbered lists in comments describing verified/expected
+       behaviors (e.g. "covered and certified" lists, sign-off summaries), tagged `[SUPPLEMENT]`.
+  - Scan the **full** description and all non-null custom fields before concluding no AC exists.
+  - Normalize all extracted items into checklist items.
+  - If no credible criteria can be extracted from any of the above, set section to `[GAP]`.
 - **Design Document**
   - Classify extracted references:
     - attachment references → `Attachments`
@@ -124,9 +181,27 @@ context and proceed with normal intake drafting/interview behavior.
 ## Step 3 — Intake completeness interview
 
 After the first write, inspect the sections still marked `[GAP]` and interview the user to resolve
-them. Ask **critical** items first, then optional ones. Group related questions. Let the user reply
-`[SKIP]` for anything unavailable. Update `intake.md` via `persist_artifact` (`force: true`) after
-each round.
+them. Ask **critical** items first, then optional ones. Group related questions.
+
+**Every question is mandatory — the user must provide an explicit answer.** Do not move on until
+the user responds to each question. The user may answer `[SKIP]` for any question to indicate the
+information is unavailable, but silently ignoring a question or receiving no answer is not
+acceptable — re-ask unanswered questions before proceeding.
+
+**Questions MUST be asked using the `vscode_askQuestions` tool** — never stated as plain text in
+the chat. Each gap must become a distinct question entry in the tool call. Do not list gaps as
+bullet points or prose and wait for a reply; always use the tool so the user receives a structured
+prompt they must respond to explicitly.
+
+**Image attachments are welcome**: for any question where a screenshot, diagram, or design mockup
+would help (e.g. UI layout, AC from a screen, design document), tell the user in the question text
+that they may attach an image directly in their chat reply in addition to typing an answer. After
+the user responds, inspect their chat message for attached images and extract any relevant
+information from them (text, UI elements, AC items, field names, etc.) exactly as you would from
+a typed answer. Treat image-derived content as `[SUPPLEMENT]` and note the source as
+"user-attached screenshot".
+
+Update `intake.md` via `persist_artifact` (`force: true`) after each round of answers.
 
 Critical sections (must be populated to pass Gate 0):
 
