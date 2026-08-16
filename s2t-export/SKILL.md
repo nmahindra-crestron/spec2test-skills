@@ -6,7 +6,7 @@ allowed-tools:
   - persist_artifact
   - check_gate
   - approve_gate
-  - export
+  - run_export
 ---
 
 You are executing the **s2t-export** skill. Perform these steps yourself using the Spec2Test
@@ -29,7 +29,7 @@ allowed-tools:
   - persist_artifact
   - check_gate
   - approve_gate
-  - export
+  - run_export
 ---
 
 You are executing the **s2t-export** skill. Perform these steps yourself using the Spec2Test
@@ -68,7 +68,7 @@ If readiness fails, stop and report the specific failures — do not export.
 
 ## Step 2 — Export to xlsx
 
-Call the `export` tool with the format spec `test-cases-xlsx@1`. The engine:
+Call the `run_export` tool with the format spec `test-cases-xlsx@1`. The engine:
 
 - blocks if `test-cases.md` violates its contract (Principle III),
 - blocks unless the `generate` (Gate 2) gate permits advancement,
@@ -79,7 +79,7 @@ The column set lives entirely in the format spec (content) — changing columns 
 
 ### Step 2A — Rename the exported xlsx to include the story identifier
 
-After the `export` tool succeeds, rename the output file so it is identifiable by story. Derive
+After the `run_export` tool succeeds, rename the output file so it is identifiable by story. Derive
 `$storyId` from the intake's `Number` field (e.g. `CONSIM-2617` in Jira-key mode, or the change
 title in manual mode). Run these terminal commands (substitute actual values):
 
