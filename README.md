@@ -26,3 +26,4 @@ compatibility via `spec2test_info`.
 - `s2t-analyze` — stage 2 (analysis)
 - `s2t-generate` — stage 3 (test cases)
 - `s2t-export` — stage 4 (xlsx export)
+- `s2t-hydrate` — stage 5 (memory hydration)

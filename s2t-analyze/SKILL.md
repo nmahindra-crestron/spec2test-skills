@@ -6,6 +6,7 @@ allowed-tools:
   - persist_artifact
   - check_gate
   - approve_gate
+  - check_memory_conflicts
 ---
 
 You are executing the **s2t-analyze** skill. Perform these steps yourself using the Spec2Test
@@ -28,6 +29,7 @@ allowed-tools:
   - persist_artifact
   - check_gate
   - approve_gate
+  - check_memory_conflicts
 ---
 
 You are executing the **s2t-analyze** skill. Perform these steps yourself using the Spec2Test
@@ -63,6 +65,9 @@ Build `analysis.md` from this template, filling it from the intake plus document
 
 (Use the template in `analysis-template.md`, included alongside this skill.)
 
+The template includes headings such as `## Evidence Register`, `## Atomic Requirements`, and
+`## Gate Result`.
+
 Core discipline (authoritative):
 
 - **Evidence Register**: every Requirement (REQ), Business Rule (BR), and Validation Rule (VR) must
@@ -97,6 +102,12 @@ After the user responds, inspect their chat message for attached images and extr
 information (UI elements, AC items, field names, flow diagrams, etc.) exactly as you would from a
 typed answer. Treat image-derived content as `[SUPPLEMENT]` and note the source as
 "user-attached screenshot".
+
+## Step 3A — Memory regression check (recommended)
+
+If `docs/s2t-memory/index.md` exists, derive candidate domain patterns from the current analysis and
+call `check_memory_conflicts` before finalizing Gate 1. Record any contradictions or interaction
+risks in the analysis output as advisory risks so downstream generation can preserve compatibility.
 
 ## Step 4 — Run Gate 1
 

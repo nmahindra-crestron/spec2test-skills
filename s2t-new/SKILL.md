@@ -72,6 +72,12 @@ for this intake session before proceeding.
 After initial prefill, both modes MUST follow the exact same lifecycle: persist intake, resolve
 `[GAP]`s via interview, re-persist with `force: true`, and run Gate 0.
 
+## Memory context (recommended)
+
+Before drafting intake details, check whether `docs/s2t-memory/index.md` exists in the workspace.
+If present, use it to understand existing behavior domains and avoid asking redundant questions
+that are already covered by durable project memory.
+
 ## Step 1 — Create the work unit
 
 Summarize the user's request into a short **change name** (3–6 words, lowercase-kebab-case).
@@ -108,6 +114,9 @@ Fill this template from whatever the user provided, then write it:
 
 (Use the template in `intake-template.md`, included alongside this skill.)
 
+The template includes headings such as `## User Story`, `## Description`, and
+`## Acceptance Criteria`.
+
 Rules:
 
 - Populate every section from the user's text. Set `Date` to today and `Slug` to the unit's slug.
@@ -130,6 +139,7 @@ Mapping requirements:
 - **Description**
   - Map Jira description body (or `[GAP]` if unavailable).
 - **Acceptance Criteria**
+  - Parse from description/comments only, then normalize extracted criteria into checklist items.
   - Check all of the following sources in order — use the **first** that yields content (OR logic):
     1. **Known AC custom fields** — check these Jira custom fields first, as Jira instances often
        store the Acceptance Criteria section as a dedicated custom field rather than inline in the
@@ -158,6 +168,7 @@ Mapping requirements:
 - **Existing Test Coverage**
   - Populate `Existing Test Case References` from linked/mentioned test assets where available.
   - Populate `Existing Test Cases` from freeform test details in description/comments where present.
+  - Ensure a `### Known Coverage Gaps` subsection exists in intake output.
   - Populate `Known Coverage Gaps` for extracted acceptance criteria without matched test evidence.
   - Use `[GAP]` when a subsection cannot be populated.
 
