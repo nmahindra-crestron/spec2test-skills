@@ -92,6 +92,13 @@ update the dependent sections (Atomic Requirements, Business/Validation Rules, C
 Traceability, Summary) and re-write `analysis.md` via `persist_artifact` (`force: true`). Continue
 until items are resolved or explicitly `[SKIP]`-deferred.
 
+**Unclear mandatory coverage rule**: all eight Coverage Intent Matrix test types (Functional,
+Negative, Edge, Boundary, Performance, Stress, Exploratory, Interaction) are mandatory for every
+requirement. If the intake/evidence does not make clear how a type applies to a requirement (no
+performance target, no stress volume, no interaction partner, etc.), do not guess, assume, or
+leave it as a silent `[GAP]` — add a mandatory question for it in this interview loop so the user
+clarifies it explicitly.
+
 **Questions MUST be asked using the `vscode_askQuestions` tool** — never stated as plain text.
 Each item must be a distinct question entry. Every question is mandatory; the user must answer
 explicitly or reply `[SKIP]`. Re-ask unanswered questions before proceeding.
@@ -102,6 +109,31 @@ After the user responds, inspect their chat message for attached images and extr
 information (UI elements, AC items, field names, flow diagrams, etc.) exactly as you would from a
 typed answer. Treat image-derived content as `[SUPPLEMENT]` and note the source as
 "user-attached screenshot".
+
+## Step 3B — Record clarifications (required)
+
+Every answer you collect in the Step 3 interview MUST be recorded verbatim in the shared **input**
+artifact `clarifications.md` — never embedded as raw human prose in `analysis.md`. The derived
+`analysis.md` (Evidence Register, Coverage Intent Matrix cells) instead **cites** the `CLR-###` id.
+
+- If `clarifications.md` does not yet exist (unit started before this rule), create it from
+  `clarifications-template.md` (included alongside this skill) via `persist_artifact` —
+  `stageId: "analysis"`, `artifact: "clarifications.md"`. A zero-row log is valid.
+- **Resolve `Recorded By`**: run `git config user.name` (fall back to `git config user.email`, then
+  the literal `user`).
+- **Append a row per answer** to the `## Clarification Log` table (columns in order): `ID`
+  (`CLR-###`, unique, increasing across the whole file) · `Stage` = `analysis` · `Recorded At` =
+  current ISO-8601 UTC timestamp · `Recorded By` · `Target` (`REQ-xxx / <TestType>`, `REQ-xxx`, or
+  `general`) · `Resolution` (`Y`/`N`/`SKIP`/`ANSWERED`) · verbatim `Question`/`Answer` (encode
+  newlines `<br>`, pipes `\|`) · `Source`.
+- **`SKIP` discipline**: when the user explicitly authorizes deferring a mandatory test type, record
+  the row with `Resolution: SKIP` and set the corresponding Coverage Intent Matrix cell to `SKIP`.
+  Never self-assign `SKIP` — it requires an explicit user answer. Every matrix `SKIP` MUST have a
+  backing `SKIP` row here or the gate fails (`cross_reference_backed`).
+- In `analysis.md`, cite the clarification (e.g. Evidence Register source = `clarification CLR-003`)
+  rather than restating the user's words.
+- Re-write `clarifications.md` with `persist_artifact` (`artifact: "clarifications.md"`,
+  `force: true`) after each round; keep the `## Summary` counts consistent.
 
 ## Step 3A — Memory regression check (recommended)
 

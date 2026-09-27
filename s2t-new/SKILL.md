@@ -225,6 +225,29 @@ CONDITIONAL result that needs human sign-off.
 
 Tag information the user supplies later with `[SUPPLEMENT]`.
 
+## Step 3B — Record clarifications (required)
+
+Human interview answers are recorded verbatim in a dedicated **input** artifact `clarifications.md`,
+never embedded as raw prose in derived artifacts. Create it once, early, from the template
+`clarifications-template.md` (included alongside this skill), then append a row per answer.
+
+- **Create the log**: on the first turn, write the minimal `clarifications.md` (the three sections
+  `Source`, `Clarification Log`, `Summary` with the empty log table) via
+  `persist_artifact` — `stageId: "intake"`, `artifact: "clarifications.md"`, `content: <filled template>`.
+  A zero-row log is valid; do NOT invent entries.
+- **Resolve `Recorded By`**: run `git config user.name` (fall back to `git config user.email`, then
+  the literal `user`). Use this value for every row you write this session.
+- **Append a row per answer** in the `## Clarification Log` table with columns, in order:
+  `ID` (`CLR-001`, `CLR-002`, … unique, increasing) · `Stage` = `intake` · `Recorded At` = current
+  ISO-8601 UTC timestamp (e.g. `2026-09-27T14:32:10Z`) · `Recorded By` (resolved above) · `Target`
+  (`REQ-xxx / <TestType>`, `REQ-xxx`, or `general`) · `Resolution` (`Y`/`N`/`SKIP`/`ANSWERED`) ·
+  `Question` and `Answer` **verbatim** (encode newlines as `<br>` and any literal pipe as `\|`) ·
+  `Source` (e.g. `user interview (vscode_askQuestions)`).
+- Re-write `clarifications.md` with `persist_artifact` (`artifact: "clarifications.md"`, `force: true`)
+  after each round. Keep the `## Summary` counts consistent.
+- The engine validates `clarifications.md` against contract `clarifications@1` at Gate 1 and Gate 2;
+  a malformed log fails those gates.
+
 ## Step 4 — Run Gate 0
 
 Count the remaining gaps in the current `intake.md`:

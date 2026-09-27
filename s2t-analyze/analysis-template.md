@@ -156,9 +156,17 @@ Score:
 
 ## Coverage Intent Matrix
 
-| Requirement | Functional | Negative | Edge | Performance | Stress |
-|-------------|------------|----------|------|-------------|--------|
-| REQ-001 | Y | Y | Y | N | N |
+All eight test-type categories below are **mandatory for every requirement — always `Y`, never
+`N`, no skipping**. Every requirement must receive coverage for Functional, Negative, Edge,
+Boundary, Performance, Stress, Exploratory, and Interaction. If it is unclear how a category
+applies to a requirement (e.g. no documented performance target, no defined stress volume), do not
+guess or silently mark it thin — **ask the user** (see Step 3 of the skill) until the coverage
+approach is clear, then record it in the corresponding Non Functional Consideration or Coverage
+Hardening Signal. Never mark a column `N` to skip generating that test type.
+
+| Requirement | Functional | Negative | Edge | Boundary | Performance | Stress | Exploratory | Interaction |
+|-------------|------------|----------|------|----------|-------------|--------|-------------|-------------|
+| REQ-001 | Y | Y | Y | Y | Y | Y | Y | Y |
 
 ## Requirement Traceability Matrix
 

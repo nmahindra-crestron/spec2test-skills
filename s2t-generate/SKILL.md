@@ -69,12 +69,52 @@ Design discipline (authoritative):
   exists in `analysis.md`. Requirements are never invented.
 - Cover Coverage Intent per the analysis matrix; satisfy Enumerated Value Inventory (FULL) and
   Behavioral Coverage Inventory; generate boundary coverage for validation limits.
-- **Exploratory / Hidden coverage** is tagged `EXPLORATORY`, never counts toward mandatory coverage,
-  and never appears in the Traceability Matrix.
+- **All eight test types are mandatory for every requirement — no skipping**: Functional,
+  Negative, Edge, Boundary, Performance, Stress, Exploratory, Interaction. Generate at least one
+  test case of each type per requirement (workflow-combined test cases may satisfy several
+  requirements and several types at once, but every type must appear somewhere in the traced
+  coverage for every requirement).
+- **Record each test case's types in the multi-value `Test Types:` field** (comma-separated) and its
+  covered requirements in the `Requirement(s):` field. Gate 2 cross-references the `analysis.md`
+  Coverage Intent Matrix against these fields: any requirement marked `Y` for a test type with no
+  test case declaring that type and referencing that requirement is a **blocking** Gate 2 failure.
+  A single workflow-combined case may declare several of the eight types to cover multiple matrix
+  cells at once.
+- If `analysis.md` does not make clear how a mandatory test type applies to a requirement (e.g. no
+  performance target, no stress volume, no defined interaction partner), do not guess or invent
+  test data — use `vscode_askQuestions` to ask the user for the missing detail before writing that
+  test case, then persist the clarified answer into the relevant field.
+- **Record every interview answer in `clarifications.md`** (the shared input log), never as raw prose
+  in `test-cases.md`. Append a row to its `## Clarification Log` table via `persist_artifact`
+  (`stageId: "generate"`, `artifact: "clarifications.md"`, `force: true`): `ID` (`CLR-###`, unique,
+  increasing across the file) · `Stage` = `generate` · `Recorded At` (ISO-8601 UTC) · `Recorded By`
+  (from `git config user.name`, fallback `user.email`, fallback `user`) · `Target`
+  (`REQ-xxx / <TestType>`) · `Resolution` (`Y`/`N`/`SKIP`/`ANSWERED`) · verbatim `Question`/`Answer`
+  (encode newlines `<br>`, pipes `\|`) · `Source`. If `clarifications.md` is absent, create it first
+  from `clarifications-template.md` (included alongside this skill).
+- **Never self-assign a coverage deferral.** You may only record a matrix cell as `SKIP` after the
+  user explicitly authorizes deferring that requirement/test-type combination; record it back to the
+  `analysis.md` Coverage Intent Matrix (via `s2t-analyze`) AND as a `Resolution: SKIP` row in
+  `clarifications.md` (whose `Target` names the requirement/test-type), never silently in
+  `test-cases.md`. Every matrix `SKIP` MUST have a backing `SKIP` clarification row or the gate fails
+  (`cross_reference_backed`). A `SKIP` cell surfaces at Gate 2 as an advisory item and downgrades the
+  gate to CONDITIONAL_PASS, which requires a recorded approval to advance.
+- **Exploratory / Interaction coverage still requires traceability**: tag exploratory cases
+  `EXPLORATORY` and interaction cases `INTERACTION`; both must still trace to at least one
+  REQ/BR/VR/approved source and appear in the Traceability Matrix — they are mandatory coverage
+  now, not advisory-only.
 - Test data must be concrete; expected results observable; steps reproducible.
-- Preserve the authored fields needed by the approved xlsx export: `User Story`, `Repository Path`,
-  `Test Type`, `Feature Area`, `Requirement(s)`, `Setup Details`, `Pre-requisite`, `Purpose`, and
-  a `Steps` table that keeps `Action` and `Expected Result` as distinct columns.
+- **Steps count rule**: every test case's `### Steps` table must have a **hard minimum of 6 data
+  rows and a maximum of 15 data rows** (aim for 6-7; the header and separator rows are not counted).
+  Gate 2 enforces these bounds and fails below 6 or above 15. Each row is one `Action` paired with a
+  non-empty, observable `Expected Result` — never leave `Expected Result` blank (a blank cell is a
+  blocking Gate 2 failure). If a scenario is too small to reach 6 steps on its own, combine it with
+  related steps/assertions from the same workflow rather than padding with trivial actions; if it
+  would exceed 15, split into multiple test cases instead of cramming more rows in.
+  Preserve the authored fields needed by the approved xlsx export and Gate 2 coverage check:
+  `User Story`, `Repository Path`, `Test Types`, `Feature Area`, `Requirement(s)`, `Setup Details`,
+  `Pre-requisite`, `Purpose`, and a `Steps` table that keeps `Action` and `Expected Result` as
+  distinct columns.
 
 **Setup Details rule**: the `Setup Details` field in every test case must contain a human-readable
 inline description of the setup steps — never just a reference token such as `SETUP-001`. Copy or
@@ -124,7 +164,10 @@ Interpret the status:
 ## Rules
 
 - Operate only on the active unit; use `force: true` to update `test-cases.md`.
-- Never invent requirements; never let exploratory coverage satisfy mandatory coverage.
+- Never invent requirements; every test case (including Exploratory and Interaction) must trace to
+  a REQ/BR/VR/approved source — no untraceable coverage.
+- All eight test types (Functional, Negative, Edge, Boundary, Performance, Stress, Exploratory,
+  Interaction) are mandatory coverage — none may be skipped or omitted.
 - Do not advance to `s2t-export` until Gate 2 is PASS, or CONDITIONAL_PASS with a recorded approval.
 - No network access.
 

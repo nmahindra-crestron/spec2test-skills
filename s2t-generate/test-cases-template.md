@@ -76,7 +76,7 @@ Validation Rule(s):
 Coverage Intent: REQ | BR | VR | REGRESSION | RISK | EXPLORATORY | INTERACTION
 Priority:
 Risk:
-Test Type:
+Test Types: <comma-separated list of one or more of: Functional, Negative, Edge, Boundary, Performance, Stress, Exploratory, Interaction>
 Tags:
 Setup Details: SETUP-001
 Purpose:
@@ -91,6 +91,9 @@ Purpose:
 |-----------|-------|
 
 ### Steps
+
+Minimum 6 data rows (aim for 6-7), maximum 15 data rows — the header and separator rows do not
+count. Every `Expected Result` cell must be non-empty and observable. Gate 2 enforces these bounds.
 
 | # | Action | Expected Result |
 |---|--------|-----------------|
