@@ -60,7 +60,10 @@ Confirm the active unit's `test-cases.md` is ready to export:
   until this holds).
 - Every test case has the required export-facing data for the approved xlsx layout (Test Case ID,
   Name, User Story, Test Repository Path, Test Type, Feature Area, Requirement ID, Setup Details,
-  Pre-requisite, Purpose, Step Action, Expected Results).
+  Pre-requisite, Purpose, Step Action, Expected Results). For interaction test cases (those whose
+  Test Type includes `Interaction`), also confirm `Interaction Type`, `Interaction Ref`, and
+  `Existing Feature(s)` are present; these export into dedicated columns (blank for non-interaction
+  cases). Export never creates or alters coverage — it only validates and transforms.
 - Traceability is intact (each test case traces to REQ/BR/VR/approved source) and Coverage Intent is
   valid and matches its source.
 

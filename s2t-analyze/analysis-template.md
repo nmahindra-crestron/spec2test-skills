@@ -124,11 +124,44 @@ State UNRESOLVED / RESOLVED / SKIP.
 
 ## Feature Interaction Analysis
 
-Evidence-based interactions between this change and existing features.
+Evidence-based interactions between this change's functional behavior and existing project
+functionality (derived from the `docs/s2t-memory/` project memory tree). Record each interaction as
+**one row** in the single combined table below — carrying both its classification/traceability
+columns and its scenario-outline columns. Do NOT split into separate register/outline tables, and do
+NOT author full test cases here (the generate stage expands each `INT-###` row into exactly one
+interaction test case).
 
-| Interaction ID | Existing Feature | New Feature | Interaction Type | Impact |
-|----------------|------------------|-------------|------------------|--------|
-| INT-001 | | | Direct | |
+Interaction coverage is **advisory**: a zero-row table is valid (e.g. no project memory, or no
+interactions found). Missing/unbacked interactions never FAIL the gate — at most CONDITIONAL_PASS.
+
+**Interaction Type** MUST be exactly one of these twelve values (fixed taxonomy):
+
+- `Direct` — change directly invokes/modifies an existing feature
+- `Workflow` — change participates in a multi-step flow spanning existing features
+- `Lifecycle` — change affects create/update/delete/state transitions of existing entities
+- `Data` — change reads/writes data shared with existing features
+- `Dependency` — change requires an existing feature as a prerequisite (or vice-versa)
+- `Configuration/Feature-Flag` — behavior varies by existing settings/flags/entitlements
+- `Concurrency/Contention` — simultaneous operations on shared resources (locks, races)
+- `Permission/Authorization` — change intersects existing access-control/role rules
+- `Integration/External` — change touches existing external API/system contracts
+- `Event/Notification` — change emits/consumes events existing features subscribe to
+- `UI/Navigation` — shared screens/navigation/component state
+- `Regression/Backward-Compatibility` — change risks altering established existing behavior
+
+**Memory Source** cites the specific project-memory fact backing the row (e.g.
+`auth-tokens (source: PROJ-123)`). When project memory is absent and the user names the existing
+feature during the interview, cite the backing clarification instead (e.g. `clarification CLR-003`).
+
+<!-- No-memory fallback: if docs/s2t-memory/ is absent/empty, add an advisory note here (e.g.
+"No project memory found — run s2t-hydrate to enable memory-backed feature-interaction analysis;
+interactions below are user-sourced only."), raise ONE mandatory clarification (run s2t-hydrate vs.
+manually name existing features), never fabricate features, and cite `clarification CLR-###` in
+Memory Source for any user-named interaction. A zero-row table is valid — coverage is advisory. -->
+
+| Interaction ID | Existing Feature | Memory Source | New Feature / REQ | Interaction Type | Risk | Impact | Objective | Pre-conditions | Interaction Steps | Expected Result |
+|----------------|------------------|---------------|-------------------|------------------|------|--------|-----------|----------------|-------------------|-----------------|
+| INT-001 | | | | Direct | Medium | | | | | |
 
 ## Risk Assessment
 
@@ -226,7 +259,7 @@ Total Requirements:
 Total Business Rules:
 Total Validation Rules:
 Total Workflows:
-Total Feature Interactions:
+Total Feature Interactions:  <!-- count of INT-### rows in the Feature Interaction Analysis table -->
 
 Assumptions — CONFIDENT / CERTAIN / UNCONFIDENT:
 Requirement Gaps — HIGH / MEDIUM / LOW / SKIP:

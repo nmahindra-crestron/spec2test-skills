@@ -77,6 +77,9 @@ Coverage Intent: REQ | BR | VR | REGRESSION | RISK | EXPLORATORY | INTERACTION
 Priority:
 Risk:
 Test Types: <comma-separated list of one or more of: Functional, Negative, Edge, Boundary, Performance, Stress, Exploratory, Interaction>
+Interaction Type: <required ONLY when Test Types includes Interaction — exactly one of the twelve values from analysis.md; omit otherwise>
+Interaction Ref: <required ONLY when Test Types includes Interaction — the single INT-### row this expands (strict 1:1); omit otherwise>
+Existing Feature(s): <required ONLY when Test Types includes Interaction — the existing feature(s) targeted, carried from analysis.md; omit otherwise>
 Tags:
 Setup Details: SETUP-001
 Purpose:

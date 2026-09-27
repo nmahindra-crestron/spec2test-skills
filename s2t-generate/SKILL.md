@@ -103,6 +103,15 @@ Design discipline (authoritative):
   `EXPLORATORY` and interaction cases `INTERACTION`; both must still trace to at least one
   REQ/BR/VR/approved source and appear in the Traceability Matrix — they are mandatory coverage
   now, not advisory-only.
+- **Expand feature-interaction outlines (strict 1:1)**: for every `INT-###` row in the `analysis.md`
+  **Feature Interaction Analysis** table, author exactly one interaction test case (one test case per
+  `INT-###`, one `Interaction Ref` per test case). Set `Test Types` to include `Interaction`, copy the
+  row's classification into `Interaction Type` (one of the twelve values), set `Interaction Ref` to the
+  originating `INT-###`, and set `Existing Feature(s)` from the row's Existing Feature. Seed the case's
+  `Purpose` from the row's Objective, `Pre-requisite` from its Pre-conditions, and the `Steps` from its
+  Interaction Steps / Expected Result (expanded to the 6–15 step discipline below). Write these three
+  fields at line start with no bold markers (parser-critical, like `Name:`). This carry-through is
+  **advisory**: a missing expansion never FAILs Gate 2 (see Step 3).
 - Test data must be concrete; expected results observable; steps reproducible.
 - **Steps count rule**: every test case's `### Steps` table must have a **hard minimum of 6 data
   rows and a maximum of 15 data rows** (aim for 6-7; the header and separator rows are not counted).
@@ -160,6 +169,13 @@ Interpret the status:
   after `approve_gate` (`stageId: "generate"`, `approved: true`), or resolve and re-run.
 - **FAIL** — missing mandatory coverage, an untraced test case, a dangling requirement reference, or
   a contract/`Name:`-formatting violation. Fix and re-run; approval cannot lift a FAIL.
+
+**Feature-interaction carry-through (advisory)**: Gate 2 also runs an advisory `reference_chain` that
+checks every `INT-###` row in `analysis.md` is referenced by an `Interaction Ref` in `test-cases.md`
+(and, optionally, that no `Interaction Ref` is dangling). A missing or dangling interaction reference
+is a **non-blocking** issue that yields CONDITIONAL_PASS (requiring recorded approval to advance) — it
+NEVER causes a FAIL. It coexists with the blocking `REQ-###` `reference_chain` and the `matrix_coverage`
+check for the Interaction test-type column, which are unchanged.
 
 ## Rules
 

@@ -135,13 +135,43 @@ artifact `clarifications.md` — never embedded as raw human prose in `analysis.
 - Re-write `clarifications.md` with `persist_artifact` (`artifact: "clarifications.md"`,
   `force: true`) after each round; keep the `## Summary` counts consistent.
 
-## Step 3A — Memory regression check (recommended)
+## Step 3A — Feature interaction analysis (memory-backed)
 
-If `docs/s2t-memory/index.md` exists, read the memory tree (start from the index; open the domain
-topic files most relevant to this analysis) and note any existing behaviors that the current change
-could contradict or regress. Record these in the analysis output as **advisory risks** so downstream
-generation can preserve compatibility. You may call `validate_memory` to confirm the memory tree is
-conforming before relying on it; treat its advisory findings as non-blocking.
+Populate the single combined **Feature Interaction Analysis** table (one `INT-###` row per
+interaction). Each interaction pairs this change's functional behavior with an existing project
+feature drawn from the project memory tree (`docs/s2t-memory/`).
+
+- If `docs/s2t-memory/index.md` exists, read the memory tree (start at the index; open the domain
+  topic files most relevant to this change). For each atomic requirement, identify existing features
+  it could touch, classify the interaction with exactly one of the twelve **Interaction Type** values
+  (see the template), and add a row. Cite the backing fact in **Memory Source**
+  (e.g. `auth-tokens (source: PROJ-123)`). Fill every column, including the scenario-outline columns
+  (Objective, Pre-conditions, Interaction Steps, Expected Result) at a high level — do NOT author full
+  test cases here (the generate stage expands each `INT-###` into exactly one interaction test case).
+- Also note any existing behavior the change could regress; record these as
+  `Regression/Backward-Compatibility` interactions (advisory risks) so downstream generation preserves
+  compatibility.
+- You may call `validate_memory` to confirm the memory tree is conforming before relying on it; treat
+  its advisory findings as non-blocking.
+- **When an interaction's existing partner feature or its interaction type cannot be determined from
+  evidence or memory**, do not guess or silently omit it — add a mandatory question in the Step 3
+  interview and record the answer in `clarifications.md` (`CLR-###`), then cite that clarification in
+  the row's **Memory Source**.
+
+**No-memory fallback**: if `docs/s2t-memory/index.md` is absent or the tree is empty, do NOT fabricate
+existing features. Instead:
+
+1. Write an advisory note as prose directly above the table (e.g. "No project memory found — run
+   `s2t-hydrate` to enable memory-backed feature-interaction analysis; interactions below are
+   user-sourced only.").
+2. Raise ONE mandatory clarification (via `vscode_askQuestions`, recorded as a `CLR-###` row) offering
+   the user the choice to (a) run `s2t-hydrate` first, or (b) manually name existing features to
+   analyse for interaction.
+3. For any interaction the user names, add a row citing `clarification CLR-###` in **Memory Source**.
+4. A zero-row table (header only) is valid — interaction coverage is advisory and never FAILs the
+   gate. Absent memory yields at most CONDITIONAL_PASS, never FAIL.
+
+Interaction coverage is **advisory** throughout: it never blocks the gate.
 
 ## Step 4 — Run Gate 1
 
