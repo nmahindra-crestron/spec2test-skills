@@ -6,7 +6,7 @@ allowed-tools:
   - persist_artifact
   - check_gate
   - approve_gate
-  - check_memory_conflicts
+  - validate_memory
 ---
 
 You are executing the **s2t-analyze** skill. Perform these steps yourself using the Spec2Test
@@ -29,7 +29,7 @@ allowed-tools:
   - persist_artifact
   - check_gate
   - approve_gate
-  - check_memory_conflicts
+  - validate_memory
 ---
 
 You are executing the **s2t-analyze** skill. Perform these steps yourself using the Spec2Test
@@ -137,9 +137,11 @@ artifact `clarifications.md` — never embedded as raw human prose in `analysis.
 
 ## Step 3A — Memory regression check (recommended)
 
-If `docs/s2t-memory/index.md` exists, derive candidate domain patterns from the current analysis and
-call `check_memory_conflicts` before finalizing Gate 1. Record any contradictions or interaction
-risks in the analysis output as advisory risks so downstream generation can preserve compatibility.
+If `docs/s2t-memory/index.md` exists, read the memory tree (start from the index; open the domain
+topic files most relevant to this analysis) and note any existing behaviors that the current change
+could contradict or regress. Record these in the analysis output as **advisory risks** so downstream
+generation can preserve compatibility. You may call `validate_memory` to confirm the memory tree is
+conforming before relying on it; treat its advisory findings as non-blocking.
 
 ## Step 4 — Run Gate 1
 

@@ -2,28 +2,21 @@
 
 - Change: {{changeSlug}}
 - Run Date: {{runDate}}
+- Mode: pipeline
 
-## Domains Updated
+## Files Created/Merged
 
-- {{domainsUpdated}}
+- {{filesCreatedOrMerged}}
 
-## Patterns Added
+## Domains Touched
 
-- {{addedCount}}
+- {{domainsTouched}}
 
-## Patterns Updated
+## Validation Result
 
-- {{updatedCount}}
-
-## Patterns Skipped
-
-- {{skippedCount}}
-
-## Conflicts Checked
-
-- Contradictions: {{contradictionsCount}}
-- Overlaps: {{overlapsCount}}
-- Interaction Risks: {{interactionRisksCount}}
+- Conforming: {{conforming}}
+- Blocking issues: {{blockingCount}}
+- Advisory issues: {{advisoryCount}}
 
 ## Warnings
 
