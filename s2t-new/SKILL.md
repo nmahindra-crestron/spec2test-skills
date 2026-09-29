@@ -189,6 +189,61 @@ If Jira retrieval fails (invalid key, inaccessible issue, unauthorized, timeout,
 present a short reason and continue in manual mode in the same session. Preserve already collected
 context and proceed with normal intake drafting/interview behavior.
 
+### Step 2D — Dereference Confluence design links (best-effort)
+
+After classifying Design Document references, dereference each **Confluence** link and capture its
+content into the `### Design Extracts` table under `## Design Document`. This is best-effort: it must
+never block intake.
+
+**The `### Design Extracts` table is always present**, even when there are no Confluence links or the
+Confluence tool is unavailable — keep the header + separator with zero data rows. An absent table
+fails `intake@1` validation at Gate 0.
+
+- **Fetch scope (exact page only)**: for each Confluence link, resolve the page id from supported URL
+  forms (standard `/wiki/spaces/.../pages/<id>/...`, `/pages/viewpage.action?pageId=<id>`, and
+  shortened `/x/<key>` tiny links) and call the configured Confluence MCP tool
+  (e.g. `confluence_get_page`). Fetch **only** the exact linked page — do **NOT** recurse into child
+  pages or Confluence links found inside the page body. Retain the original URL in `Confluence Links`.
+- **Read the page body only** — do NOT read or extract Confluence page **comments** (out of scope).
+- **Extract by taxonomy**: read **all** sections of the page body and write one `DEX-###` row per
+  **populated** review area, preserving source wording for substantive content (requirements, rules,
+  limits, error/edge behavior — verbatim, not paraphrased). Cover these `Area` values as they apply:
+  - **Universal areas**: `Scope & Boundaries`, `Architecture & Ownership`, `Data Models & Contracts`,
+    `Edge Cases & Failure Modes`, `Lifecycle & Resource Cleanup`, `Performance & Constraints`,
+    `Testability & Verification`.
+  - **Feature-domain sub-areas** (whichever apply): `Editor / UI State`,
+    `Import / Export / Migration`, `APIs / Backend Services`, `Device / Driver Systems`.
+  - **Core review questions**: `Core: State Location`, `Core: Boundaries & Limits`,
+    `Core: Teardown / Exit`, `Core: Batch / Multi-select`, `Core: Failure & Recovery`. For a `Core:`
+    question the page does not answer, you MAY write a row with `Detail` = `unknown`; for all other
+    areas, **omit** empty areas (never fabricate content or record an authoritative "none").
+- **Row format** (columns in this exact order): `ID` = increasing `DEX-001`, `DEX-002`, … (unique);
+  `Source` = `[SOURCE: Confluence <page-id-or-title>]`; `Type` = `SUPPLEMENT`; `Area` = one allowed
+  value above; `Detail` = the content, encoding newlines as `<br>` and escaping pipes as `\|`.
+- **De-duplicate**: if the same page is linked more than once, capture it once per area (no repeats).
+- **Large pages**: if a full extract is impractical, prioritize the universal and domain areas and
+  drop decorative/boilerplate content first (tables of contents, change logs, related-page lists);
+  mark such a row's `Detail` as `[CONDENSED]` and retain the source link to the full page.
+- **Supplement, not authoritative**: extracted content is `SUPPLEMENT` evidence — it is distinct from
+  human-authored intake and MUST NOT be promoted into Acceptance Criteria without explicit human
+  confirmation.
+
+**Fallback (never blocks intake):**
+
+- **Confluence tool not configured/available**: record the bare URL in `Confluence Links` (today's
+  behavior), keep the zero-row Design Extracts skeleton, and continue.
+- **Per-link failure** (inaccessible, unauthorized, 404, timeout, tool error, or an unresolvable
+  URL): keep the bare URL, add a brief `not extracted: <reason>` note beside it, write no `DEX-###`
+  row for that link, and continue with the remaining links and the rest of intake. Treat an HTML
+  sign-in/login page response as a failure, not as page content.
+- **Successful fetch but empty page** (only a title, or only images/attachments with no text): write
+  zero rows for that page and add a brief `no extractable content` note beside its retained URL
+  (distinct from the `not extracted` failure note).
+
+**Determinism**: capture extracts **once** at intake time. Do NOT re-fetch on an unchanged
+re-persist; only refresh extracted content when you deliberately re-run extraction and re-persist
+with `force: true`.
+
 ## Step 3 — Intake completeness interview
 
 After the first write, inspect the sections still marked `[GAP]` and interview the user to resolve

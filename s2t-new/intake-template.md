@@ -48,6 +48,19 @@ Spec Links
 
 <!-- Include [SOURCE: Jira ABC-123] markers for Jira-derived values where available. -->
 
+### Design Extracts
+
+<!--
+  Extracted Confluence page content (feature 014). ALWAYS keep this table present, even with zero
+  data rows — an absent table fails intake@1 validation. Add one row per (Confluence page × populated
+  review area). Each row: Type = SUPPLEMENT; Source = [SOURCE: Confluence <id-or-title>]; Area = one
+  allowed taxonomy value; Detail encodes multi-line content with <br> and escapes pipes as \|.
+  Leave zero data rows when no Confluence content was extracted.
+-->
+
+| ID | Source | Type | Area | Detail |
+|----|--------|------|------|--------|
+
 
 ## Comments / Q&A
 
