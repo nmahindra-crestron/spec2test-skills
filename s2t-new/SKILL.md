@@ -7,6 +7,12 @@ allowed-tools:
   - persist_artifact
   - check_gate
   - approve_gate
+  - jira_issues
+  - jira_links
+  - jira_attachments
+  - confluence_get_page
+  - confluence_get_page_images
+  - vscode_askQuestions
 ---
 
 You are executing the **s2t-new** skill. Perform these steps yourself using the Spec2Test
@@ -16,7 +22,7 @@ tools — do not print or summarize this document.
 
 Call the `spec2test_info` tool. If it is unavailable, tell the user the Spec2Test engine (MCP
 server) is not installed — point them at the repository README — and stop. If its reported
-`version` is below `0.2.0`, tell the user to update the engine to `0.2.0` or newer and stop.
+`version` is below `0.3.0`, tell the user to update the engine to `0.3.0` or newer and stop.
 Otherwise, continue with the steps below.
 
 ---
@@ -195,9 +201,10 @@ After classifying Design Document references, dereference each **Confluence** li
 content into the `### Design Extracts` table under `## Design Document`. This is best-effort: it must
 never block intake.
 
-**The `### Design Extracts` table is always present**, even when there are no Confluence links or the
-Confluence tool is unavailable — keep the header + separator with zero data rows. An absent table
-fails `intake@1` validation at Gate 0.
+**The `### Design Extracts` and `### Source Coverage` tables are always present**, even when there
+are no Confluence links or the Confluence tool is unavailable — keep each header + separator with
+zero data rows. An absent Design Extracts table fails `intake@1` validation at Gate 0, and Design
+Extracts rows without a Source Coverage table fail Gate 0.
 
 - **Fetch scope (exact page only)**: for each Confluence link, resolve the page id from supported URL
   forms (standard `/wiki/spaces/.../pages/<id>/...`, `/pages/viewpage.action?pageId=<id>`, and
@@ -205,44 +212,99 @@ fails `intake@1` validation at Gate 0.
   (e.g. `confluence_get_page`). Fetch **only** the exact linked page — do **NOT** recurse into child
   pages or Confluence links found inside the page body. Retain the original URL in `Confluence Links`.
 - **Read the page body only** — do NOT read or extract Confluence page **comments** (out of scope).
-- **Extract by taxonomy**: read **all** sections of the page body and write one `DEX-###` row per
-  **populated** review area, preserving source wording for substantive content (requirements, rules,
-  limits, error/edge behavior — verbatim, not paraphrased). Cover these `Area` values as they apply:
+- **Extract granularly**: read **all** sections of the page body. Write one `DEX-###` row per
+  rule, limit, flow segment, or error/edge behavior — not one row per area. Keep source wording
+  verbatim; **never summarize or condense**. Choose the best-fitting `Area` for each row:
   - **Universal areas**: `Scope & Boundaries`, `Architecture & Ownership`, `Data Models & Contracts`,
     `Edge Cases & Failure Modes`, `Lifecycle & Resource Cleanup`, `Performance & Constraints`,
     `Testability & Verification`.
   - **Feature-domain sub-areas** (whichever apply): `Editor / UI State`,
     `Import / Export / Migration`, `APIs / Backend Services`, `Device / Driver Systems`.
+  - **Behavior areas**: `Workflow / Sequence` for flow and step-order content (what happens, in
+    what order, per item type); `Business Rules` for rules, limits, and conditions that decide an
+    outcome. Prefer these over a universal area when the content is a flow or a rule.
   - **Core review questions**: `Core: State Location`, `Core: Boundaries & Limits`,
     `Core: Teardown / Exit`, `Core: Batch / Multi-select`, `Core: Failure & Recovery`. For a `Core:`
     question the page does not answer, you MAY write a row with `Detail` = `unknown`; for all other
     areas, **omit** empty areas (never fabricate content or record an authoritative "none").
 - **Row format** (columns in this exact order): `ID` = increasing `DEX-001`, `DEX-002`, … (unique);
-  `Source` = `[SOURCE: Confluence <page-id-or-title>]`; `Type` = `SUPPLEMENT`; `Area` = one allowed
-  value above; `Detail` = the content, encoding newlines as `<br>` and escaping pipes as `\|`.
-- **De-duplicate**: if the same page is linked more than once, capture it once per area (no repeats).
-- **Large pages**: if a full extract is impractical, prioritize the universal and domain areas and
-  drop decorative/boilerplate content first (tables of contents, change logs, related-page lists);
-  mark such a row's `Detail` as `[CONDENSED]` and retain the source link to the full page.
+  `Source` = `[SOURCE: Confluence <page-id-or-title> §<section heading>]`; `Type` = `SUPPLEMENT`;
+  `Area` = one allowed value above; `Detail` = the content, encoding newlines as `<br>` and escaping
+  pipes as `\|`.
+- **Source Coverage** (columns in this exact order: `Source`, `Item`, `Status`, `DEX IDs`,
+  `Reason`): write one row per examined page section. A page section is a heading, at any level,
+  that has its own body content; a container heading with no body of its own gets no row.
+  - `EXTRACTED` — `DEX IDs` lists the comma-separated `DEX-###` ids written from that section.
+  - `SKIPPED` — boilerplate (table of contents, change log, related-page list) or no requirement
+    content; `Reason` required. Write no DEX rows for boilerplate.
+  - `NOT EXTRACTED` — the section could not be read; `Reason` required.
+  - Every `DEX-###` row must be cited by at least one `EXTRACTED` row (Gate 0 checks this).
+- **De-duplicate**: extract each page once, even when it is reachable by more than one route (story
+  link, linked story, repeated link). One Source Coverage row per (source, item).
+- **Large pages**: extract every section anyway; there is no size cap and no `[CONDENSED]` row.
 - **Supplement, not authoritative**: extracted content is `SUPPLEMENT` evidence — it is distinct from
   human-authored intake and MUST NOT be promoted into Acceptance Criteria without explicit human
   confirmation.
 
 **Fallback (never blocks intake):**
 
-- **Confluence tool not configured/available**: record the bare URL in `Confluence Links` (today's
-  behavior), keep the zero-row Design Extracts skeleton, and continue.
+- **Confluence tool not configured/available**: record the bare URL in `Confluence Links`, keep the
+  zero-row Design Extracts skeleton, add one Source Coverage row per link (`Item` = `page: <title or id>`,
+  `NOT EXTRACTED`, `Reason` = `Confluence tool unavailable`), and continue.
 - **Per-link failure** (inaccessible, unauthorized, 404, timeout, tool error, or an unresolvable
-  URL): keep the bare URL, add a brief `not extracted: <reason>` note beside it, write no `DEX-###`
-  row for that link, and continue with the remaining links and the rest of intake. Treat an HTML
-  sign-in/login page response as a failure, not as page content.
+  URL): keep the bare URL, write no `DEX-###` row for that link, add a Source Coverage row
+  (`Item` = `page: <title or id>`, `NOT EXTRACTED`, `Reason` = the failure), and continue with the remaining links
+  and the rest of intake. Treat an HTML sign-in/login page response as a failure, not as page content.
 - **Successful fetch but empty page** (only a title, or only images/attachments with no text): write
-  zero rows for that page and add a brief `no extractable content` note beside its retained URL
-  (distinct from the `not extracted` failure note).
+  zero DEX rows from its text and a Source Coverage row (`Item` = `page: <title or id>`, `SKIPPED`,
+  `Reason` = `no extractable text`); its images are still handled by Step 2E.
 
 **Determinism**: capture extracts **once** at intake time. Do NOT re-fetch on an unchanged
 re-persist; only refresh extracted content when you deliberately re-run extraction and re-persist
 with `force: true`.
+
+### Step 2E — Read design images (best-effort)
+
+Read the images on every page handled in Step 2D and on the Jira story (and on each linked story
+confirmed in Step 2F).
+
+- **Retrieval**: Confluence — `confluence_get_page_images` for each page. Jira — `jira_attachments`
+  (`list`, then `get_content` for each image attachment). Images arrive inline in the tool result.
+  **Never write image bytes to disk** — no downloads, no temporary files.
+- **What to read**: if the story is about icons, logos, or other visual elements, read every image.
+  Otherwise read every image except clearly decorative ones (spacers, avatars, generic banners),
+  which get a `SKIPPED` Source Coverage row with a reason. There is no cap on the number of images.
+- **Recording**: write the requirement content an image shows (flows, states, labels, limits, layout
+  rules) as `DEX-###` rows with `Type` = `SUPPLEMENT` and
+  `Source` = `[SOURCE: Image <file> @ Confluence <page>]` or `[SOURCE: Image <file> @ Jira <key>]`.
+  Do not repeat content already extracted from the page text. Write one Source Coverage row per
+  image (`Item` = `image: <file>`).
+- **Failures** (retrieval error, unreadable image, or an external image the tools cannot fetch):
+  Source Coverage row `NOT EXTRACTED` with the reason, and a Step 3 question asking the user to
+  paste or describe the image. Intake continues.
+
+### Step 2F — Linked stories (Jira-key mode)
+
+Screen the story's linked issues for requirement-relevant content.
+
+- **Scope**: issue links of any type, plus the parent (epic or parent issue) and sub-tasks (read
+  with `jira_issues` / `jira_links`). Remote/web links are excluded.
+- **Screen**: judge each one's relevance from its summary, type, and link type against this
+  story's requirements.
+- **Confirm**: ask one multi-select question (`vscode_askQuestions`) listing the linked issues, with
+  the relevant ones pre-selected and free text to add other keys. Ask even when no candidate was
+  detected or the story has no links.
+- **Extract each confirmed story** (one level only — do not follow that story's own links to other
+  stories; do not read comments):
+  - its description and acceptance criteria → `DEX-###` rows with `Source` = `[SOURCE: Jira <key>]`
+    and Source Coverage rows (`Item` = `description: <key>` / `acceptance criteria: <key>`);
+  - its images → Step 2E;
+  - its Confluence links → Step 2D.
+- **Order and dedup**: finish this confirmation before running Steps 2D and 2E on linked-story
+  sources. A page or image already extracted for the main story (or another linked story) is not
+  extracted again and gets no second Source Coverage row.
+- **Failure**: a story that cannot be fetched gets a Source Coverage row (`Item` = `story: <key>`,
+  `NOT EXTRACTED`, `Reason`); intake continues.
 
 ## Step 3 — Intake completeness interview
 
@@ -279,6 +341,17 @@ All other sections are non-critical: leaving them `[GAP]` does not fail the gate
 CONDITIONAL result that needs human sign-off.
 
 Tag information the user supplies later with `[SUPPLEMENT]`.
+
+**Per-type workflows**: when `## Business Workflows` (or a design extract) states that one flow
+applies to several listed item types (e.g. "same flow for X, Y, Z"), ask whether any of those types
+behaves differently. For each type that differs, add a separate `[SUPPLEMENT]` bullet to Business
+Workflows describing that type's flow, and record the answer as a `CLR-###` (Stage `intake`). If the
+user says there is no difference, keep the single flow and ask no follow-up.
+
+**Images not extracted**: for each Source Coverage image row that is `NOT EXTRACTED`, ask the user to
+paste the image or describe it. If they supply content, write it as `DEX-###` rows (same `Source` as
+Step 2E) and change the row to `EXTRACTED` with the new ids. If they `[SKIP]`, the row stays
+`NOT EXTRACTED`.
 
 ## Step 3B — Record clarifications (required)
 
@@ -321,6 +394,19 @@ Call `check_gate` — `stageId: "intake"`, `metrics: { "criticalGaps": { "value"
   (`stageId: "intake"`, `approved: true`). The pipeline does not advance until approval is recorded.
 - **FAIL** — a critical section is still a gap. Resolve it, re-write `intake.md`, and re-run Step 4.
   Approval cannot lift a FAIL.
+
+Source Coverage results:
+
+- **FAIL `table_id_coverage`** — the named `DEX-###` rows are not cited by any `EXTRACTED` Source
+  Coverage row (or the Source Coverage table is missing). Add the id to the row for the section or
+  image it came from. `DEX IDs` must be comma-separated (`DEX-001, DEX-002`); ids separated by
+  semicolons or spaces are not recognized and show up here as "not cited".
+- **FAIL `table_refs_resolve`** — an `EXTRACTED` row cites a `DEX-###` id that is not in Design
+  Extracts, or its `DEX IDs` cell holds text with no `DEX-###` id at all. Fix the id or add the
+  missing extract row.
+- **CONDITIONAL_PASS from `matrix_completeness`** — one or more Source Coverage rows are
+  `NOT EXTRACTED`. Show the user the listed items. Either recover the content (Step 3) or record
+  sign-off with `approve_gate`.
 
 ## Rules
 

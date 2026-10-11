@@ -16,7 +16,7 @@ tools — do not print or summarize this document.
 
 Call the `spec2test_info` tool. If it is unavailable, tell the user the Spec2Test engine (MCP
 server) is not installed — point them at the repository README — and stop. If its reported
-`version` is below `0.2.0`, tell the user to update the engine to `0.2.0` or newer and stop.
+`version` is below `0.3.0`, tell the user to update the engine to `0.3.0` or newer and stop.
 Otherwise, continue with the steps below.
 
 ---
@@ -54,7 +54,9 @@ Drive everything through the Spec2Test engine tools; do not hand-manage folders,
 
 ## Step 1 — Read the approved intake
 
-Read `intake.md` from the **active work unit**. You do not need to re-check Gate 0: the engine
+Read `intake.md` from the **active work unit** — **in full**, not a partial or truncated read. Before
+proceeding, confirm the highest `DEX-###` id you read equals the highest id in the intake's
+`### Design Extracts` table; if not, re-read. You do not need to re-check Gate 0: the engine
 blocks `persist_artifact` for the `analysis` stage until the intake gate is PASS or an approved
 CONDITIONAL_PASS (it will name `intake` if you try too early). If no unit is active, stop and tell
 the user to run `s2t-new` or switch to a unit.
@@ -84,6 +86,32 @@ Write it with `persist_artifact` — `stageId: "analysis"`, `content: <the fille
 rewrite `analysis.md` on later turns, pass **`force: true`** so the engine accepts the update instead
 of returning `reconcile-required`.
 
+## Step 2A — Design extract accounting (required when intake has Design Extracts)
+
+Every intake `DEX-###` row must appear **exactly once** in `## Design Extract Accounting`. Gate 1
+fails otherwise. For each row choose a disposition:
+
+- `RESTATES-AC` — **only** when the row adds nothing beyond an existing Acceptance Criterion. Put
+  the existing REQ/BR/VR/WF id(s) in **Mapped To**. No question needed.
+- **Every other row is a candidate** and gets a mandatory question in Step 3 ("Include as a
+  requirement / context only / no?"). Do not decide on the user's behalf:
+  - "include" → `EXTENSION`: create or extend REQ/BR/VR/WF items, tag each
+    `[DERIVED: DEX-###]`, add an Evidence Register row (Source Type `Design Extract`, Source Location
+    `DEX-###`), list the ids in **Mapped To**, and cite the answer's `CLR-###`.
+  - "context only" → `CONTEXT-ONLY` (the user's decision only): **CLR** and **Reason** required.
+  - "no" or `[SKIP]` → `DEFERRED`: not promoted; **CLR** and **Reason** required.
+- A row that **partly** restates an AC and partly adds behavior is a candidate. If the user says
+  "include", the whole row is `EXTENSION` and **Mapped To** lists both the existing item and the
+  derived item(s). Never split a DEX row.
+- Every item tagged `[DERIVED: DEX-###]` must appear in that row's **Mapped To** (the engine does
+  not check this direction).
+- **Per-type workflows**: when a workflow covers several item types and a DEX row (or an intake
+  per-type workflow) describes type-specific behavior, create a separate `WF-###` with its own REQs
+  rather than folding the difference into the shared workflow.
+- **Conflicts**: DEX rows that contradict each other or the AC go to Conflict Analysis and are
+  resolved in the Step 3 interview.
+- Only mention `DEX-###` ids that exist in the intake; Gate 1 fails on unknown ids.
+
 ## Step 3 — Resolution interview loop
 
 Detect gaps, conflicts, ambiguities, and unconfident assumptions. Interview the user to resolve them
@@ -91,6 +119,10 @@ Detect gaps, conflicts, ambiguities, and unconfident assumptions. Interview the 
 update the dependent sections (Atomic Requirements, Business/Validation Rules, Coverage Intent,
 Traceability, Summary) and re-write `analysis.md` via `persist_artifact` (`force: true`). Continue
 until items are resolved or explicitly `[SKIP]`-deferred.
+
+**Design extract candidates**: ask one mandatory question for every Step 2A candidate (every DEX
+row that is not `RESTATES-AC`). `CONTEXT-ONLY` is only ever the user's answer. A `[SKIP]` answer
+makes the row `DEFERRED`.
 
 **Unclear mandatory coverage rule**: all eight Coverage Intent Matrix test types (Functional,
 Negative, Edge, Boundary, Performance, Stress, Exploratory, Interaction) are mandatory for every
@@ -132,6 +164,8 @@ artifact `clarifications.md` — never embedded as raw human prose in `analysis.
   backing `SKIP` row here or the gate fails (`cross_reference_backed`).
 - In `analysis.md`, cite the clarification (e.g. Evidence Register source = `clarification CLR-003`)
   rather than restating the user's words.
+- **Design extract answers**: record a `CLR-###` row for each disposition answer (`Target` =
+  `DEX-###`) and cite that id in the Accounting row's **CLR** column.
 - Re-write `clarifications.md` with `persist_artifact` (`artifact: "clarifications.md"`,
   `force: true`) after each round; keep the `## Summary` counts consistent.
 
@@ -197,6 +231,12 @@ Interpret the returned status:
 - **FAIL** — a blocking check failed (unsupported REQ/BR/VR, an open conflict, an open HIGH gap, or
   a poor quality score < 50). Fix it, re-write `analysis.md`, and re-run Step 4. Approval cannot lift
   a FAIL.
+
+  Design extract accounting failures name what to fix: a DEX id missing from (or duplicated in)
+  `## Design Extract Accounting`, a **Mapped To** id with no matching REQ/BR/VR/WF row, a **CLR**
+  id absent from `clarifications.md`, a missing conditional cell, or a `DEX-###` mentioned in
+  `analysis.md` that does not exist in the intake. Fix the table or the referenced rows, re-write,
+  and re-run Step 4.
 
 Keep your recorded Gate Result section consistent with the metrics you pass to `check_gate`.
 

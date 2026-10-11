@@ -51,15 +51,34 @@ Spec Links
 ### Design Extracts
 
 <!--
-  Extracted Confluence page content (feature 014). ALWAYS keep this table present, even with zero
-  data rows — an absent table fails intake@1 validation. Add one row per (Confluence page × populated
-  review area). Each row: Type = SUPPLEMENT; Source = [SOURCE: Confluence <id-or-title>]; Area = one
-  allowed taxonomy value; Detail encodes multi-line content with <br> and escapes pipes as \|.
-  Leave zero data rows when no Confluence content was extracted.
+  Extracted design content (Confluence pages, images, linked stories). ALWAYS keep this table
+  present, even with zero data rows — an absent table fails intake@1 validation. Add one row per
+  rule, limit, flow segment, or error/edge behavior (verbatim, never condensed). Each row:
+  Type = SUPPLEMENT; Source = [SOURCE: Confluence <id-or-title> §<section>] |
+  [SOURCE: Image <file> @ Confluence <page> | Jira <key>] | [SOURCE: Jira <key>]; Area = one
+  allowed taxonomy value (including Workflow / Sequence and Business Rules); Detail encodes
+  multi-line content with <br> and escapes pipes as \|.
+  Leave zero data rows when no design content was extracted.
 -->
 
 | ID | Source | Type | Area | Detail |
 |----|--------|------|------|--------|
+
+### Source Coverage
+
+<!--
+  One row per examined source item: each page section (any heading level with its own body
+  content), each image, and each linked-story item (description, acceptance criteria). ALWAYS keep
+  this table present. Item labels: `<section heading>`, `image: <file>`, `page: <title or id>`,
+  `story: <key>`, `description: <key>`, `acceptance criteria: <key>`. Status:
+    EXTRACTED      — DEX IDs required (comma-separated DEX-### ids written from this item)
+    SKIPPED        — Reason required (boilerplate, decorative image, no requirement content)
+    NOT EXTRACTED  — Reason required (fetch/read failed); Gate 0 needs sign-off
+  Every Design Extracts row must be cited by at least one EXTRACTED row.
+-->
+
+| Source | Item | Status | DEX IDs | Reason |
+|--------|------|--------|---------|--------|
 
 
 ## Comments / Q&A

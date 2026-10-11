@@ -55,6 +55,20 @@ Source sections found (✅ / [GAP]); total GAP references carried from intake.
 |-------------|---------------|--------------|--------------|
 | WF-001 | | | REQ-001 |
 
+## Design Extract Accounting
+
+One row per intake `DEX-###` (exactly once). Omit this section, or leave zero rows, when the intake
+has no Design Extracts. Dispositions:
+
+- `RESTATES-AC` — adds nothing beyond an Acceptance Criterion. Mapped To required; no question.
+- `EXTENSION` — user chose to include it. Mapped To (the `[DERIVED: DEX-###]` items) and CLR required.
+- `CONTEXT-ONLY` — user decided it is background only. CLR and Reason required.
+- `DEFERRED` — user declined or answered `[SKIP]`; not promoted. CLR and Reason required.
+
+| DEX ID | Disposition | Mapped To | CLR | Reason |
+|--------|-------------|-----------|-----|--------|
+| DEX-001 | RESTATES-AC | REQ-001 | | |
+
 ## Enumerated Value Inventory
 
 Finite, named value sets that must not be partially covered. Coverage Requirement ∈ FULL /
