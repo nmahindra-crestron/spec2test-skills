@@ -14,9 +14,8 @@ tools — do not print or summarize this document.
 ## Step 0 — Engine compatibility (required)
 
 Call the `spec2test_info` tool. If it is unavailable, tell the user the Spec2Test engine (MCP
-server) is not installed — point them at the repository README — and stop. If its reported
-`version` is below `0.2.0`, tell the user to update the engine to `0.2.0` or newer and stop.
-Otherwise, continue with the steps below.
+server) is not installed — point them at the repository README — and stop. Otherwise, continue
+with the steps below.
 
 ---
 
@@ -36,9 +35,8 @@ tools — do not print or summarize this document.
 ## Step 0 — Engine compatibility (required)
 
 Call the `spec2test_info` tool. If it is unavailable, tell the user the Spec2Test engine (MCP
-server) is not installed — point them at the repository README — and stop. If its reported
-`version` is below `0.2.0`, tell the user to update the engine to `0.2.0` or newer and stop.
-Otherwise, continue with the steps below.
+server) is not installed — point them at the repository README — and stop. Otherwise, continue
+with the steps below.
 
 ---
 
