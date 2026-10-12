@@ -10,6 +10,7 @@ allowed-tools:
   - jira_issues
   - jira_links
   - jira_attachments
+  - jira_get_issue
   - confluence_get_page
   - confluence_get_page_images
   - vscode_askQuestions
@@ -138,6 +139,7 @@ Mapping requirements:
   - `Number` ← Jira issue key
 - **Jira Metadata**
   - `Issue Key`, `Status`, `Priority`, `Sprint`, `Labels`, `Components`, `Linked Issues` from Jira.
+    In `Linked Issues`, also list the parent as `Parent: <key>` when one is known (Step 2F).
   - **Do not extract personal identity fields** from Jira (`Assignee`, `Reporter`): leave those rows
     as `[GAP]`.
 - **Description**
@@ -168,6 +170,11 @@ Mapping requirements:
     - Confluence links → `Confluence Links`
     - Figma links → `Figma Links`
     - remaining spec/architecture links → `Spec Links`
+  - **Confluence Links**: one line per page (de-duplicated by page id, Step 2D), annotated with its
+    origin(s), e.g. `- <url> — <title> (origin: description; link panel: linked)`. Allowed origins:
+    `description`, `link panel: linked`, `link panel: mentioned`, `parent <key>`,
+    `linked story <key>`. List **every** discovered page, including link-panel pages the user did
+    not select and pages on a different Confluence site (Step 2F).
   - Missing subsections remain `[GAP]`.
 - **Existing Test Coverage**
   - Populate `Existing Test Case References` from linked/mentioned test assets where available.
@@ -198,6 +205,12 @@ context and proceed with normal intake drafting/interview behavior.
 After classifying Design Document references, dereference each **Confluence** link and capture its
 content into the `### Design Extracts` table under `## Design Document`. This is best-effort: it must
 never block intake.
+
+The pages handled here are:
+
+- (a) Confluence URLs found in the story description — read automatically, without asking;
+- (b) link-panel pages the user selected in Step 2F;
+- (c) Confluence links found in the parent and linked stories confirmed in Step 2F.
 
 **The `### Design Extracts` and `### Source Coverage` tables are always present**, even when there
 are no Confluence links or the Confluence tool is unavailable — keep each header + separator with
@@ -237,8 +250,11 @@ Extracts rows without a Source Coverage table fail Gate 0.
     content; `Reason` required. Write no DEX rows for boilerplate.
   - `NOT EXTRACTED` — the section could not be read; `Reason` required.
   - Every `DEX-###` row must be cited by at least one `EXTRACTED` row (Gate 0 checks this).
-- **De-duplicate**: extract each page once, even when it is reachable by more than one route (story
-  link, linked story, repeated link). One Source Coverage row per (source, item).
+- **De-duplicate by page id**: extract each page once, even when it is reachable by more than one
+  route — description URLs, link-panel pages, the parent, linked stories, or a repeated link. The
+  standard, `viewpage.action?pageId=`, tiny-link (`/x/<key>`), and remote-link `globalId`
+  (`pageId=<id>`) forms of the same page resolve to the same page id. One Source Coverage row per
+  (source, item).
 - **Large pages**: extract every section anyway; there is no size cap and no `[CONDENSED]` row.
 - **Supplement, not authoritative**: extracted content is `SUPPLEMENT` evidence — it is distinct from
   human-authored intake and MUST NOT be promoted into Acceptance Criteria without explicit human
@@ -263,8 +279,8 @@ with `force: true`.
 
 ### Step 2E — Read design images (best-effort)
 
-Read the images on every page handled in Step 2D and on the Jira story (and on each linked story
-confirmed in Step 2F).
+Read the images on every page handled in Step 2D and on the Jira story (and on the parent, each
+linked story, and each link-panel page confirmed in Step 2F).
 
 - **Retrieval**: Confluence — `confluence_get_page_images` for each page. Jira — `jira_attachments`
   (`list`, then `get_content` for each image attachment). Images arrive inline in the tool result.
@@ -281,28 +297,66 @@ confirmed in Step 2F).
   Source Coverage row `NOT EXTRACTED` with the reason, and a Step 3 question asking the user to
   paste or describe the image. Intake continues.
 
-### Step 2F — Linked stories (Jira-key mode)
+### Step 2F — Linked stories and link-panel pages (Jira-key mode)
 
-Screen the story's linked issues for requirement-relevant content.
+Offer the story's parent, linked issues, and link-panel Confluence pages for extraction.
 
-- **Scope**: issue links of any type, plus the parent (epic or parent issue) and sub-tasks (read
-  with `jira_issues` / `jira_links`). Remote/web links are excluded.
-- **Screen**: judge each one's relevance from its summary, type, and link type against this
-  story's requirements.
-- **Confirm**: ask one multi-select question (`vscode_askQuestions`) listing the linked issues, with
-  the relevant ones pre-selected and free text to add other keys. Ask even when no candidate was
-  detected or the story has no links.
-- **Extract each confirmed story** (one level only — do not follow that story's own links to other
-  stories; do not read comments):
-  - its description and acceptance criteria → `DEX-###` rows with `Source` = `[SOURCE: Jira <key>]`
-    and Source Coverage rows (`Item` = `description: <key>` / `acceptance criteria: <key>`);
-  - its images → Step 2E;
-  - its Confluence links → Step 2D.
-- **Order and dedup**: finish this confirmation before running Steps 2D and 2E on linked-story
-  sources. A page or image already extracted for the main story (or another linked story) is not
+- **Discover**: call `jira_get_issue` with `issue_key` = the story key,
+  `fields: "parent,subtasks,issuelinks"`, and `include: "remote_links"`. One call returns the parent,
+  the sub-task list, the issue links, and the link panel (remote links).
+  - **Fallback** when `jira_get_issue` is unavailable or the call fails (never blocks intake):
+    - parent: use an `Epic Link` / `Parent Link` custom-field value from `jira_issues get`, if any;
+    - issue links: use `jira_links list`;
+    - link panel: write one Source Coverage row (`Item` = `link panel: <key>`, `NOT EXTRACTED`,
+      `Reason` = `remote-link tool unavailable` or the failure);
+    - if no parent is found through the custom fields either, write a Source Coverage row
+      (`Item` = `parent lookup: <key>`, `NOT EXTRACTED`, `Reason` = `parent lookup unavailable`),
+      so "no parent" stays distinguishable from "parent could not be looked up".
+- **Candidates** (in this order):
+  1. **Parent** — always listed when known and **pre-selected**, regardless of relevance screening.
+     **Direct parent only**: never fetch or offer the parent's own parent (or higher). A parent that
+     is also an explicit issue link is listed once, as the parent.
+  2. **Issue links** of any type — **screen** each one's relevance from its summary, type, and link
+     type against this story's requirements; pre-select the relevant ones.
+  3. **Link-panel Confluence pages** — a remote link is a Confluence page when its `application.type`
+     is `com.atlassian.confluence` or its `globalId` contains `pageId=<id>`.
+     - A relationship containing `mention` (case-insensitive, e.g. `mentioned in`) is a "mentioned"
+       page: listed **not pre-selected**. Any other relationship (e.g. `Wiki Page`) is a "linked"
+       page: listed **pre-selected**. List "linked" pages before "mentioned" pages; there is no cap.
+     - Do not offer a page already in the story description (matched by page id, Step 2D) — it is
+       read automatically.
+     - **Different Confluence site**: the known site(s) are the hosts of Confluence links in the
+       story description. A link-panel page whose host matches none of them is not offered.
+  - **Never offered**: **sub-tasks** (the story's sub-task list), unless a sub-task is also an
+    explicit issue link, in which case it is offered under that link type. **Sibling stories** are
+    never queried or offered. Non-Confluence remote links are ignored.
+- **Confirm**: ask one multi-select question (`vscode_askQuestions`) listing the candidates with the
+  pre-selection above, and free text to add other keys or Confluence URLs. Ask even when there are
+  no candidates. When the link panel could not be read, the free-text hint invites the user to paste
+  link-panel Confluence URLs.
+- **Unselected**: an offered parent or link-panel page left unticked gets a Source Coverage row
+  (`Item` = `story: <parent-key>` or `page: <title or id>`, `SKIPPED`,
+  `Reason` = `not selected by user`) and no `DEX-###` rows. It is still listed under
+  `Confluence Links` (pages) or `Linked Issues` (parent). Unticked issue links get no Source
+  Coverage row (unchanged).
+- **Extract** (one level only — do not read comments):
+  - each confirmed **parent or linked story**: its description and acceptance criteria → `DEX-###`
+    rows with `Source` = `[SOURCE: Jira <key>]` and Source Coverage rows
+    (`Item` = `description: <key>` / `acceptance criteria: <key>`); its images → Step 2E; its
+    Confluence links → Step 2D. Do **not** read the issue links or link panel of the parent or of a
+    linked story.
+  - each confirmed **link-panel page** → Step 2D and Step 2E. If the story description had no
+    Confluence links, first compare the page's host with the Confluence links of the confirmed
+    parent and linked stories: a page whose host matches none of them is **not read**.
+  - a link-panel page on a **different Confluence site** (above) gets no `DEX-###` rows, is listed
+    under `Confluence Links`, and gets a Source Coverage row (`Item` = `page: <title or id>`,
+    `NOT EXTRACTED`, `Reason` = `different Confluence site`). When no Confluence link exists
+    anywhere, no page is treated as a different site.
+- **Order and dedup**: finish this confirmation before running Steps 2D and 2E on Step 2F sources.
+  A page or image already extracted for the main story (or another confirmed source) is not
   extracted again and gets no second Source Coverage row.
-- **Failure**: a story that cannot be fetched gets a Source Coverage row (`Item` = `story: <key>`,
-  `NOT EXTRACTED`, `Reason`); intake continues.
+- **Failure**: a parent or story that cannot be fetched gets a Source Coverage row
+  (`Item` = `story: <key>`, `NOT EXTRACTED`, `Reason`); intake continues.
 
 ## Step 3 — Intake completeness interview
 
