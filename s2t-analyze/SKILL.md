@@ -91,6 +91,12 @@ fails otherwise. For each row choose a disposition:
 
 - `RESTATES-AC` — **only** when the row adds nothing beyond an existing Acceptance Criterion. Put
   the existing REQ/BR/VR/WF id(s) in **Mapped To**. No question needed.
+- `IMPLEMENTATION-DETAIL` — the row is **purely** internal code design with no tester-observable
+  effect (see *Question scope* in Step 3): class/interface names such as `IHelper`, design patterns,
+  dependency injection, module/layer structure, internal data structures or threading. Not
+  promoted; **Reason** required (`implementation detail — not tester-observable`);
+  leave **CLR** empty. No question needed. If any part of the row affects observable behavior, it
+  is a candidate instead.
 - **Every other row is a candidate** and gets a mandatory question in Step 3 ("Include as a
   requirement / context only / no?"). Do not decide on the user's behalf:
   - "include" → `EXTENSION`: create or extend REQ/BR/VR/WF items, tag each
@@ -118,8 +124,25 @@ update the dependent sections (Atomic Requirements, Business/Validation Rules, C
 Traceability, Summary) and re-write `analysis.md` via `persist_artifact` (`force: true`). Continue
 until items are resolved or explicitly `[SKIP]`-deferred.
 
+**Question scope — tester-observable only**: these test cases are written and executed manually,
+so only ask about what a tester can set up, do, or observe through the product (UI, inputs, outputs,
+messages, saved/exported data, states, limits, timings, permissions). Never ask about internal
+code design: class/interface/method names (e.g. `IHelper`), design patterns, dependency injection,
+module or layer structure, internal data structures, threading/async models, or refactoring
+choices. Test before asking: *would the answer change a test step, test data, or an expected
+result?* If not, do not ask — record it as context (or `IMPLEMENTATION-DETAIL` for DEX rows). If an
+internal detail does have an observable effect, ask about the effect, not the code. If the user
+volunteers internal design details in an answer, record them verbatim as given but ask no follow-up
+about them. When it is unclear whether a detail is internal or observable, ask — phrased only as the
+visible effect (e.g. *"What does the user see when …?"*); use `IMPLEMENTATION-DETAIL` only for content
+that is clearly internal. At the end of each interview round, show a short **Not asked
+(implementation detail)** list of the items you did not ask about for this reason (omit it when
+empty). If the user names an item, ask it as a normal question in the next round and update its
+disposition from the answer (e.g. `IMPLEMENTATION-DETAIL` → `EXTENSION` / `CONTEXT-ONLY` /
+`DEFERRED`, with the CLR recorded).
+
 **Design extract candidates**: ask one mandatory question for every Step 2A candidate (every DEX
-row that is not `RESTATES-AC`). `CONTEXT-ONLY` is only ever the user's answer. A `[SKIP]` answer
+row that is not `RESTATES-AC` or `IMPLEMENTATION-DETAIL`). `CONTEXT-ONLY` is only ever the user's answer. A `[SKIP]` answer
 makes the row `DEFERRED`.
 
 **Unclear mandatory coverage rule**: all eight Coverage Intent Matrix test types (Functional,

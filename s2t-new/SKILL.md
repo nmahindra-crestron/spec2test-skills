@@ -247,7 +247,11 @@ Extracts rows without a Source Coverage table fail Gate 0.
   that has its own body content; a container heading with no body of its own gets no row.
   - `EXTRACTED` — `DEX IDs` lists the comma-separated `DEX-###` ids written from that section.
   - `SKIPPED` — boilerplate (table of contents, change log, related-page list) or no requirement
-    content; `Reason` required. Write no DEX rows for boilerplate.
+    content; `Reason` required. Write no DEX rows for boilerplate. A section that is **purely**
+    internal code design (class/interface names such as `IHelper`, patterns, DI wiring, code
+    structure) with no tester-observable behavior is also `SKIPPED`, `Reason` =
+    `implementation detail — not tester-observable`. In a mixed section, extract only the
+    observable behavior.
   - `NOT EXTRACTED` — the section could not be read; `Reason` required.
   - Every `DEX-###` row must be cited by at least one `EXTRACTED` row (Gate 0 checks this).
 - **De-duplicate by page id**: extract each page once, even when it is reachable by more than one
@@ -288,6 +292,9 @@ linked story, and each link-panel page confirmed in Step 2F).
 - **What to read**: if the story is about icons, logos, or other visual elements, read every image.
   Otherwise read every image except clearly decorative ones (spacers, avatars, generic banners),
   which get a `SKIPPED` Source Coverage row with a reason. There is no cap on the number of images.
+  An image that only shows internal code design (class/interface diagrams such as `IHelper`,
+  dependency or layer diagrams) with no tester-observable behavior also gets a `SKIPPED` row,
+  `Reason` = `implementation detail — not tester-observable`, and no DEX rows.
 - **Recording**: write the requirement content an image shows (flows, states, labels, limits, layout
   rules) as `DEX-###` rows with `Type` = `SUPPLEMENT` and
   `Source` = `[SOURCE: Image <file> @ Confluence <page>]` or `[SOURCE: Image <file> @ Jira <key>]`.
@@ -368,6 +375,23 @@ the user responds to each question. The user may answer `[SKIP]` for any questio
 information is unavailable, but silently ignoring a question or receiving no answer is not
 acceptable — re-ask unanswered questions before proceeding.
 
+**Question scope — tester-observable only**: the downstream output is manual test cases, so only ask
+about what a tester can set up, do, or observe through the product (UI, inputs, outputs, messages,
+saved or exported data, states, limits, timings, permissions). Never ask about internal code design:
+class/interface/method names (e.g. `IHelper`), design patterns, dependency injection, module or layer
+structure, internal data structures, threading/async models, or refactoring choices. For
+`Architecture & Ownership` or `Data Models & Contracts` gaps, ask only about user-visible fields,
+values, and limits. If the answer would not change a test step, test data, or an expected result, do
+not ask: replace the item's `[GAP]` with `[N/A — implementation detail]`. If an internal detail
+does have an observable effect, ask about the effect, not the code. If the user volunteers internal
+design details in an answer, record them verbatim as given but ask no follow-up about them. When it
+is unclear whether a detail is internal or observable, ask — phrased only as the visible effect
+(e.g. *"What does the user see when …?"*); use `[N/A — implementation detail]` or `SKIPPED`
+(implementation detail) only for content that is clearly internal. At the end of each interview
+round, show a short **Not asked (implementation detail)** list of the items you did not ask about
+for this reason (omit it when empty). If the user names an item, ask it as a normal question in the
+next round and update its marker from the answer.
+
 **Questions MUST be asked using the `vscode_askQuestions` tool** — never stated as plain text in
 the chat. Each gap must become a distinct question entry in the tool call. Do not list gaps as
 bullet points or prose and wait for a reply; always use the tool so the user receives a structured
@@ -433,8 +457,8 @@ never embedded as raw prose in derived artifacts. Create it once, early, from th
 Count the remaining gaps in the current `intake.md`:
 
 - `criticalGaps` = number of the three critical sections still unpopulated (`[GAP]`/empty).
-- `nonCriticalGaps` = number of other sections still `[GAP]` (a section the user marked `[SKIP]`
-  does not count).
+- `nonCriticalGaps` = number of other sections still `[GAP]` (a section the user marked `[SKIP]`,
+  or the agent marked `[N/A — implementation detail]`, does not count).
 
 Call `check_gate` — `stageId: "intake"`, `metrics: { "criticalGaps": { "value": <N> },
 "nonCriticalGaps": { "value": <M> } }`. Interpret the returned status:

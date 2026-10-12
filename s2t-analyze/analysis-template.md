@@ -64,6 +64,14 @@ has no Design Extracts. Dispositions:
 - `EXTENSION` — user chose to include it. Mapped To (the `[DERIVED: DEX-###]` items) and CLR required.
 - `CONTEXT-ONLY` — user decided it is background only. CLR and Reason required.
 - `DEFERRED` — user declined or answered `[SKIP]`; not promoted. CLR and Reason required.
+- `IMPLEMENTATION-DETAIL` — internal code design only (class/interface names, patterns, wiring) with
+  no tester-observable behavior; not promoted, no question. Reason required
+  (`implementation detail — not tester-observable`); CLR not needed.
+
+Question scope: only tester-observable details are asked about (what a tester can set up, do, or
+observe). Unclear rows are asked about their visible effect; only clearly internal rows are
+`IMPLEMENTATION-DETAIL`, and they are listed under "Not asked (implementation detail)" at the end of
+each interview round so the user can bring any of them back.
 
 | DEX ID | Disposition | Mapped To | CLR | Reason |
 |--------|-------------|-----------|-----|--------|

@@ -82,6 +82,18 @@ Design discipline (authoritative):
   performance target, no stress volume, no defined interaction partner), do not guess or invent
   test data — use `vscode_askQuestions` to ask the user for the missing detail before writing that
   test case, then persist the clarified answer into the relevant field.
+- **Question scope — tester-observable only**: these are manual test cases, so only ask about what a
+  tester can set up, do, or observe through the product (UI, inputs, outputs, messages, saved or
+  exported data, states, limits, timings, permissions). Never ask about internal code design:
+  class/interface/method names (e.g. `IHelper`), design patterns, dependency injection, module or
+  layer structure, internal data structures, threading/async models, or refactoring choices. If the
+  answer would not change a test step, test data, or an expected result, do not ask. If an internal
+  detail does have an observable effect, ask about the effect, not the code. If the user volunteers
+  internal design details in an answer, record them verbatim as given but ask no follow-up about them.
+  When it is unclear whether a detail is internal or observable, ask — phrased only as the visible
+  effect (e.g. *"What does the user see when …?"*). At the end of each interview round, show a short
+  **Not asked (implementation detail)** list of the items you did not ask about for this reason (omit
+  it when empty); if the user names an item, ask it as a normal question in the next round.
 - **Record every interview answer in `clarifications.md`** (the shared input log), never as raw prose
   in `test-cases.md`. Append a row to its `## Clarification Log` table via `persist_artifact`
   (`stageId: "generate"`, `artifact: "clarifications.md"`, `force: true`): `ID` (`CLR-###`, unique,
