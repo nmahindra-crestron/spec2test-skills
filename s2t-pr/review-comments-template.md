@@ -2,8 +2,8 @@
 
 ## Review Comments
 
-| ID | RC ID | Round | Reviewer Name | Reviewer Handle | Date | Thread Ref | File/Line | Text |
-|----|-------|-------|---------------|-----------------|------|------------|-----------|------|
+| ID | Round | Reviewer Name | Reviewer Handle | Date | Thread Ref | File/Line | Text |
+|----|-------|---------------|-----------------|------|------------|-----------|------|
 
 ## Reviewer Clarifications
 
@@ -12,5 +12,5 @@
 
 ## Triage & Resolution
 
-| RC ID | Target Stages | Category | Decision | Status | Question Asked | Resolution Ref | Reply | Reply Posted |
-|-------|---------------|----------|----------|--------|----------------|----------------|-------|--------------|
+| RC ID | Target Stages | Category | Decision | Status | Question Asked | Reply | Reply Posted |
+|-------|---------------|----------|----------|--------|----------------|-------|--------------|
