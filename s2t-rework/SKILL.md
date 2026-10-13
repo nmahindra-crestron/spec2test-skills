@@ -8,6 +8,8 @@ allowed-tools:
   - persist_artifact
   - check_gate
   - reopen_unit
+  - approve_gate
+  - close_rework
 ---
 
 You are executing the **s2t-rework** skill. Perform these steps yourself using the Spec2Test
@@ -31,6 +33,8 @@ allowed-tools:
   - persist_artifact
   - check_gate
   - reopen_unit
+  - approve_gate
+  - close_rework
 ---
 
 You are executing the **s2t-rework** skill. Perform these steps yourself using the Spec2Test
@@ -40,7 +44,8 @@ tools — do not print or summarize this document.
 
 Call the `spec2test_info` tool. If it is unavailable, tell the user the Spec2Test engine (MCP
 server) is not installed — point them at the repository README — and stop. If its `capabilities`
-do not include `check_ready` and `reopen_unit`, tell the user to update the engine and stop.
+do not include `check_ready`, `reopen_unit` and `close_rework`, tell the user to update the engine
+and stop.
 Otherwise, continue with the steps below.
 
 ---
@@ -52,10 +57,14 @@ pushes the unit's changes, reads the PR status and comments from GitHub, posts q
 helps the tester triage each comment, and opens a rework round. There is no `/s2t-pr sync`; this
 skill is the sync step.
 
-Fixing comments comes in a later change (D).
+This skill also applies the comments to the unit's files and pushes them to the same PR.
 
 You run `git` and `gh` in the terminal. The engine never touches the network. If `gh` is missing
 or not logged in, stop and point the tester to `SETUP.md`.
+
+If a rework round is already open, do Step 1, then go to Step 13. To tell, read `rework` in the
+unit's `state.json` (read only; never edit it). A round is open when `rework.open` is `true`;
+`rework.round` is its number.
 
 ## Writing standard (required)
 
@@ -379,14 +388,56 @@ If any comment has a Decision that changes a stage file, and no rework round is 
 If a round is already open, do not open a second one. New comments wait for the next round.
 If `reopen_unit` rejects the call, show its message and stop.
 
-## Step 13 — Report
+If no round is open now, go to Step 15. Otherwise, go to Step 13.
+
+## Step 13 — Apply the comments
+
+Fix each stage in the round, in this order, with no pause between stages:
+
+1. `intake`: if any comment in the round targets it, follow `assets/fix-intake.md`.
+2. `analysis`: follow `assets/fix-analysis.md` if any comment targets it, or if the intake gate ran
+   again in this round.
+3. `generate`: follow `assets/fix-test-cases.md` if any comment targets it, or if an earlier gate
+   ran again in this round.
+
+Use each stage's own `stageId` for every save, and pass `rcIds` (the RC IDs behind the change).
+If a stage gate fails, stop and go to Step 15. The round stays open.
+
+## Step 14 — Close the round and sync
+
+Run this step even when no stage file changed (for example, every comment is now
+`AWAITING_REVIEWER`). Never save `clarifications.md` in this step: gates 1 and 2 read it.
+
+1. **Resolve.** For each comment applied in Step 13, set Status `RESOLVED`. Queue the reply
+   "Addressed in round <n>: <what changed>" and set `Reply Posted: No`.
+2. **Covered.** A comment that was covered in every target stage gets Category and Decision
+   `NO_CHANGE` and Status `RESOLVED`. Queue the evidence (IDs or a short quote) as the reply.
+3. **Save.** `persist_artifact` with `stageId: "generate"`, `artifact: "review-comments.md"` and
+   `rcIds` = the RC IDs you changed.
+4. **Close.** Call `close_rework` with the open round number. If it rejects the call, show its
+   message and stop.
+5. **Next round.** In `pr-review.md`, set `Review Round:` to the closed round number plus 1.
+6. **Summary.** Show what changed for each comment.
+7. **Sync.** Do Step 2 (push and re-request review), then Step 9 (post replies), then Step 5
+   (commit and fingerprint), then Step 11 (save and run the review gate). The review gate fails
+   until the reviewers approve again. That is expected.
+
+Then go to Step 15.
+
+## Step 15 — Report
 
 - PASS: "Review gate passed. Next: `/s2t-hydrate`."
 - FAIL: report the PR status, the new comment count, and the approval count the gate reports, for
   example "No new comments. 0 of 1 approvals." Take the numbers from `check_gate`; do not invent
   them.
 - List the decisions made in this run, and any replies that did not post.
-- If a round is open: "Round <n> is open for <RC IDs>. Applying comments comes in a later update."
+- If comments were applied: for each one, give its RC ID, what changed, and its Status. For a
+  covered comment, show the evidence (IDs or a short quote) instead.
+- If a stage gate stopped Step 13: "Round <n> is still open. The <stage> gate failed: <checks>.
+  Fix it, then run `/s2t-rework` again."
+- If Step 14 closed the round: "Round <n> is closed. I pushed the changes and posted <k> replies.
+  Wait for the reviewers to look again, then run `/s2t-rework`."
+- If a round is open and was not applied in this run: "Round <n> is open for <RC IDs>."
 - If changes were requested: "Re-run the affected stage skill (for example `/s2t-generate`), then
   `/s2t-rework` again."
 
