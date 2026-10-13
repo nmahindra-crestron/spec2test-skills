@@ -47,6 +47,169 @@ meaningful, workflow-oriented, fully traceable test cases (`test-cases.md`), the
 
 Drive everything through the engine tools; do not hand-manage folders or gates.
 
+## Writing standard (required)
+
+Follow this standard for everything you write and every question you ask the user.
+Ask one short, plain question at a time.
+
+### Who the rules apply to
+
+These rules apply to everything you write and every question you ask:
+
+- Markdown files and plan files
+- Requirements and user stories
+- Test cases, test steps, and expected results
+- Purpose, Setup Details, and Pre-requisite sections
+- Documentation, bug reports, and release notes
+- Any other project artifact
+
+### Keep It Simple
+
+Keep everything simple and direct.
+
+- Use plain, easy English. Aim for about an 8th-grade reading level.
+- Write for new testers, developers, product owners, and business users.
+- Choose clear words over technical ones.
+- Do not sound corporate, academic, or machine-written.
+
+Use the simpler word:
+
+| Use | Instead of |
+|-----|------------|
+| use | utilize |
+| start | initiate |
+| find | identify |
+| change | modify |
+| help | facilitate |
+| check | validate |
+
+"Validate" is fine at the start of a test case title. In other text, prefer "check".
+
+Avoid buzzwords, hard words, long sentences, needless jargon, and filler text.
+
+### General Writing Rules
+
+1. Use active voice.
+2. Keep sentences short and direct.
+3. Explain a technical term when you must use it.
+4. Write as if you are explaining to a new team member.
+5. Give enough detail, but never make it complicated.
+6. Make every instruction something the reader can act on.
+7. Do not assume the reader knows the product.
+8. Do not be vague. Say exactly what you mean.
+
+### Agent Question Rules
+
+Every question you ask the user must:
+
+- Be short and clear.
+- Ask only one thing at a time.
+- Avoid jargon unless it is needed.
+- Make sense to a non-technical user.
+
+Good:
+
+- Which module should be tested?
+- Should valid or invalid data be used?
+
+Avoid:
+
+- Please clarify the desired validation scenario for the target workflow implementation.
+
+### Documentation Rules
+
+For Purpose, Setup Details, Pre-requisite, guides, and other documentation, always explain:
+
+1. What it does.
+2. Why it is needed.
+3. How to use it.
+
+Use clear headings, bullet points where they help, and step-by-step instructions. Assume the reader is new to the product.
+
+### Test Case Title Standard
+
+A title says what the test checks. The `Name:` value must start with one of these words:
+
+- Verify
+- Validate
+- Check
+- Confirm
+
+Do not write a title as a user action. The gate fails a title that does not start with one of these words.
+
+Good:
+
+- Verify user login with valid credentials
+- Validate successful module compilation
+- Check project build completes without errors
+- Confirm output file is generated successfully
+
+Avoid:
+
+- Login
+- Create User
+- Build Project
+- Upload File
+
+### Test Step Standard
+
+1. Make each step detailed but simple.
+2. Use one action per step. Do not join two actions in one step.
+3. Give enough detail for a new tester to run the test.
+4. Name the screen, the input, the choice, and the action.
+5. Use plain English.
+6. A test case has 6 to 18 steps.
+
+Example:
+
+1. Open the project.
+2. Select the target module.
+3. Enter valid values in all required fields.
+4. Save the changes.
+5. Click Build.
+
+### Expected Result Standard
+
+An expected result must:
+
+- Describe behavior the tester can see.
+- State exactly what should happen.
+- Be easy to check.
+- Have at least 5 words.
+
+Avoid:
+
+- Works correctly
+- Successful
+- No issues found
+
+Good:
+
+- The build completes without errors.
+- A success message is displayed.
+- The output file is generated.
+- The generated file opens without errors.
+
+### Copied Text
+
+Keep text copied from Jira, Confluence, or user answers exactly as it is. Do not rewrite it, and do not count it as a rule break.
+
+### Final Quality Check
+
+Before you save any output, check each item:
+
+- Can a new tester understand the content?
+- Can any sentence be made simpler?
+- Did you remove needless technical terms?
+- Does every test case title start with Verify, Validate, Check, or Confirm?
+- Can every step be run without guessing?
+- Does every expected result say exactly what the tester will see?
+- Do Purpose, Setup Details, and Pre-requisite say what, why, and how?
+- Is the whole output simple and easy to follow?
+
+If any answer is No, rewrite that part. Count the rule breaks you could not fix.
+
+
 ## Step 1 — Read the approved analysis
 
 Read `analysis.md` from the **active work unit**. You need not re-check Gate 1: the engine blocks
@@ -82,6 +245,7 @@ Design discipline (authoritative):
   performance target, no stress volume, no defined interaction partner), do not guess or invent
   test data — use `vscode_askQuestions` to ask the user for the missing detail before writing that
   test case, then persist the clarified answer into the relevant field.
+  Follow the Agent Question Rules in the writing standard: one short, plain question at a time.
 - **Question scope — tester-observable only**: these are manual test cases, so only ask about what a
   tester can set up, do, or observe through the product (UI, inputs, outputs, messages, saved or
   exported data, states, limits, timings, permissions). Never ask about internal code design:
@@ -119,17 +283,18 @@ Design discipline (authoritative):
   row's classification into `Interaction Type` (one of the twelve values), set `Interaction Ref` to the
   originating `INT-###`, and set `Existing Feature(s)` from the row's Existing Feature. Seed the case's
   `Purpose` from the row's Objective, `Pre-requisite` from its Pre-conditions, and the `Steps` from its
-  Interaction Steps / Expected Result (expanded to the 6–15 step discipline below). Write these three
+  Interaction Steps / Expected Result (expanded to the 6–18 step discipline below). Write these three
   fields at line start with no bold markers (parser-critical, like `Name:`). This carry-through is
   **advisory**: a missing expansion never FAILs Gate 2 (see Step 3).
 - Test data must be concrete; expected results observable; steps reproducible.
-- **Steps count rule**: every test case's `### Steps` table must have a **hard minimum of 6 data
-  rows and a maximum of 15 data rows** (aim for 6-7; the header and separator rows are not counted).
-  Gate 2 enforces these bounds and fails below 6 or above 15. Each row is one `Action` paired with a
+- **Steps count rule**: every test case's `### Steps` table must have **6 to 18 data rows**
+  (aim for 6-7; the header and separator rows are not counted).
+  Gate 2 enforces these bounds and fails below 6 or above 18. Each row is one `Action` paired with a
   non-empty, observable `Expected Result` — never leave `Expected Result` blank (a blank cell is a
-  blocking Gate 2 failure). If a scenario is too small to reach 6 steps on its own, combine it with
+  blocking Gate 2 failure). Each `Expected Result` has at least 5 words; a shorter one gives a Gate 2
+  warning. If a scenario is too small to reach 6 steps on its own, combine it with
   related steps/assertions from the same workflow rather than padding with trivial actions; if it
-  would exceed 15, split into multiple test cases instead of cramming more rows in.
+  would exceed 18, split into multiple test cases instead of cramming more rows in.
   Preserve the authored fields needed by the approved xlsx export and Gate 2 coverage check:
   `User Story`, `Repository Path`, `Test Types`, `Feature Area`, `Requirement(s)`, `Setup Details`,
   `Pre-requisite`, `Purpose`, and a `Steps` table that keeps `Action` and `Expected Result` as
@@ -154,6 +319,16 @@ heading so the export stage omits them from the output file:
 **start of the line, with no bold markers** (never `**Name:**`). The export runner parses this label;
 a bold or indented `Name` fails the contract and Gate 2 cannot pass.
 
+**Title rule:** the `Name:` value must start with Verify, Validate, Check, or Confirm, for example
+`Name: Verify user login with valid credentials`. A title like `Name: Login` fails Gate 2 and export.
+Purpose, Setup Details, and Pre-requisite must not be empty; an empty one gives a Gate 2 warning.
+
+## Final self-review (required)
+
+Before you save, check your output against the Final Quality Check in the writing standard.
+Fix what you can. Do not change text copied from Jira, Confluence, or user answers.
+Count the rule breaks you could not fix.
+
 Write it with `persist_artifact` — `stageId: "generate"`, `content: <the filled markdown>`. On
 regeneration/interview rewrites, pass **`force: true`**.
 
@@ -169,6 +344,9 @@ to the gate:
 - `inventoryCoverage` = % of FULL Enumerated/Behavioral inventory items covered.
 - `openGenerationWarnings` = count of carried-over open gaps/conflicts/ambiguities, remaining
   assumptions, or partially-covered inventories recorded as Generation Warnings.
+- `writingViolations` = the count of rule breaks from the Final self-review.
+  Send the count as "writingViolations": { "value": <N> }. If it is not 0, or you leave it out,
+  the result is CONDITIONAL_PASS.
 
 Call `check_gate` — `stageId: "generate"`, `metrics: { "untracedTestCases": {"value": N}, ... }`.
 Interpret the status:

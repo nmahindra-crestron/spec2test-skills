@@ -64,7 +64,7 @@ Covered Validation Rules:
 
 ### TC-001
 
-Name: <plain title — do NOT use bold; the export parser needs `Name:` at line start>
+Name: Verify <what the test checks; start with Verify, Validate, Check, or Confirm, e.g. "Verify user login with valid credentials" — do NOT use bold; the export parser needs `Name:` at line start>
 
 User Story:
 Feature Area:
@@ -95,8 +95,8 @@ Purpose:
 
 ### Steps
 
-Minimum 6 data rows (aim for 6-7), maximum 15 data rows — the header and separator rows do not
-count. Every `Expected Result` cell must be non-empty and observable. Gate 2 enforces these bounds.
+Use 6–18 steps (aim for 6-7) — the header and separator rows do not
+count. Every `Expected Result` cell must be non-empty, observable, and at least 5 words. Gate 2 enforces these bounds.
 
 | # | Action | Expected Result |
 |---|--------|-----------------|

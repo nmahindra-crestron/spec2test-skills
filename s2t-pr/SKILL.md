@@ -53,6 +53,169 @@ You run `git` and `gh` in the terminal. The engine never touches the network. If
 not logged in, or lacks rights, stop and point the tester to `SETUP.md` (`gh auth login` with repo
 and pull-request write access, plus git `user.name` and `user.email`).
 
+## Writing standard (required)
+
+Follow this standard for everything you write and every question you ask the user.
+Ask one short, plain question at a time.
+
+### Who the rules apply to
+
+These rules apply to everything you write and every question you ask:
+
+- Markdown files and plan files
+- Requirements and user stories
+- Test cases, test steps, and expected results
+- Purpose, Setup Details, and Pre-requisite sections
+- Documentation, bug reports, and release notes
+- Any other project artifact
+
+### Keep It Simple
+
+Keep everything simple and direct.
+
+- Use plain, easy English. Aim for about an 8th-grade reading level.
+- Write for new testers, developers, product owners, and business users.
+- Choose clear words over technical ones.
+- Do not sound corporate, academic, or machine-written.
+
+Use the simpler word:
+
+| Use | Instead of |
+|-----|------------|
+| use | utilize |
+| start | initiate |
+| find | identify |
+| change | modify |
+| help | facilitate |
+| check | validate |
+
+"Validate" is fine at the start of a test case title. In other text, prefer "check".
+
+Avoid buzzwords, hard words, long sentences, needless jargon, and filler text.
+
+### General Writing Rules
+
+1. Use active voice.
+2. Keep sentences short and direct.
+3. Explain a technical term when you must use it.
+4. Write as if you are explaining to a new team member.
+5. Give enough detail, but never make it complicated.
+6. Make every instruction something the reader can act on.
+7. Do not assume the reader knows the product.
+8. Do not be vague. Say exactly what you mean.
+
+### Agent Question Rules
+
+Every question you ask the user must:
+
+- Be short and clear.
+- Ask only one thing at a time.
+- Avoid jargon unless it is needed.
+- Make sense to a non-technical user.
+
+Good:
+
+- Which module should be tested?
+- Should valid or invalid data be used?
+
+Avoid:
+
+- Please clarify the desired validation scenario for the target workflow implementation.
+
+### Documentation Rules
+
+For Purpose, Setup Details, Pre-requisite, guides, and other documentation, always explain:
+
+1. What it does.
+2. Why it is needed.
+3. How to use it.
+
+Use clear headings, bullet points where they help, and step-by-step instructions. Assume the reader is new to the product.
+
+### Test Case Title Standard
+
+A title says what the test checks. The `Name:` value must start with one of these words:
+
+- Verify
+- Validate
+- Check
+- Confirm
+
+Do not write a title as a user action. The gate fails a title that does not start with one of these words.
+
+Good:
+
+- Verify user login with valid credentials
+- Validate successful module compilation
+- Check project build completes without errors
+- Confirm output file is generated successfully
+
+Avoid:
+
+- Login
+- Create User
+- Build Project
+- Upload File
+
+### Test Step Standard
+
+1. Make each step detailed but simple.
+2. Use one action per step. Do not join two actions in one step.
+3. Give enough detail for a new tester to run the test.
+4. Name the screen, the input, the choice, and the action.
+5. Use plain English.
+6. A test case has 6 to 18 steps.
+
+Example:
+
+1. Open the project.
+2. Select the target module.
+3. Enter valid values in all required fields.
+4. Save the changes.
+5. Click Build.
+
+### Expected Result Standard
+
+An expected result must:
+
+- Describe behavior the tester can see.
+- State exactly what should happen.
+- Be easy to check.
+- Have at least 5 words.
+
+Avoid:
+
+- Works correctly
+- Successful
+- No issues found
+
+Good:
+
+- The build completes without errors.
+- A success message is displayed.
+- The output file is generated.
+- The generated file opens without errors.
+
+### Copied Text
+
+Keep text copied from Jira, Confluence, or user answers exactly as it is. Do not rewrite it, and do not count it as a rule break.
+
+### Final Quality Check
+
+Before you save any output, check each item:
+
+- Can a new tester understand the content?
+- Can any sentence be made simpler?
+- Did you remove needless technical terms?
+- Does every test case title start with Verify, Validate, Check, or Confirm?
+- Can every step be run without guessing?
+- Does every expected result say exactly what the tester will see?
+- Do Purpose, Setup Details, and Pre-requisite say what, why, and how?
+- Is the whole output simple and easy to follow?
+
+If any answer is No, rewrite that part. Count the rule breaks you could not fix.
+
+
 ## Step 1 — Check the earlier gates
 
 Call `check_ready` with `stageId: "review"`. If `ready` is false, show its `message`, say
@@ -69,6 +232,7 @@ Call `check_ready` with `stageId: "review"`. If `ready` is false, show its `mess
 
 Ask the tester for the reviewers, each as a Name and a GitHub handle. You may suggest owners from
 `CODEOWNERS`, but the tester must confirm each one. Check the list, and ask again on any problem:
+Follow the Agent Question Rules in the writing standard: one short, plain question at a time.
 
 - A handle listed twice → "<handle> is listed twice."
 - The submitter's handle → "You opened this PR, so you can't review it."
@@ -82,6 +246,7 @@ Do not check how many reviewers there are. The review gate checks the count and 
 
 Ask which reviewers are required (Yes/No each), and the target branch. The default target is the
 repo's default branch (`gh repo view --json defaultBranchRef --jq .defaultBranchRef.name`).
+Follow the Agent Question Rules in the writing standard: one short, plain question at a time.
 
 ## Step 5 — Commit and push the unit's markdown files
 
@@ -113,6 +278,12 @@ git push -u origin s2t/<slug>
   - `Status: OPEN`, `Review Round: 1`, `Submitter:` = the handle from step 2;
   - one Reviewers row per reviewer, with `Required` Yes/No and `Decision` `PENDING`;
   - one Status History row: now (UTC ISO), `—` → `OPEN`, Round 1, Note `PR created`.
+
+## Final self-review (required)
+
+Before you save, check your output against the Final Quality Check in the writing standard.
+Fix what you can. Do not change text copied from Jira, Confluence, or user answers.
+Count the rule breaks you could not fix.
 
 ## Step 8 — Validate and save
 

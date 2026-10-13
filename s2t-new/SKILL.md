@@ -56,6 +56,169 @@ Use this skill to start the Spec2Test pipeline for a new user story or feature. 
 
 You drive this through the Spec2Test engine tools — do not hand-create folders or slugs.
 
+## Writing standard (required)
+
+Follow this standard for everything you write and every question you ask the user.
+Ask one short, plain question at a time.
+
+### Who the rules apply to
+
+These rules apply to everything you write and every question you ask:
+
+- Markdown files and plan files
+- Requirements and user stories
+- Test cases, test steps, and expected results
+- Purpose, Setup Details, and Pre-requisite sections
+- Documentation, bug reports, and release notes
+- Any other project artifact
+
+### Keep It Simple
+
+Keep everything simple and direct.
+
+- Use plain, easy English. Aim for about an 8th-grade reading level.
+- Write for new testers, developers, product owners, and business users.
+- Choose clear words over technical ones.
+- Do not sound corporate, academic, or machine-written.
+
+Use the simpler word:
+
+| Use | Instead of |
+|-----|------------|
+| use | utilize |
+| start | initiate |
+| find | identify |
+| change | modify |
+| help | facilitate |
+| check | validate |
+
+"Validate" is fine at the start of a test case title. In other text, prefer "check".
+
+Avoid buzzwords, hard words, long sentences, needless jargon, and filler text.
+
+### General Writing Rules
+
+1. Use active voice.
+2. Keep sentences short and direct.
+3. Explain a technical term when you must use it.
+4. Write as if you are explaining to a new team member.
+5. Give enough detail, but never make it complicated.
+6. Make every instruction something the reader can act on.
+7. Do not assume the reader knows the product.
+8. Do not be vague. Say exactly what you mean.
+
+### Agent Question Rules
+
+Every question you ask the user must:
+
+- Be short and clear.
+- Ask only one thing at a time.
+- Avoid jargon unless it is needed.
+- Make sense to a non-technical user.
+
+Good:
+
+- Which module should be tested?
+- Should valid or invalid data be used?
+
+Avoid:
+
+- Please clarify the desired validation scenario for the target workflow implementation.
+
+### Documentation Rules
+
+For Purpose, Setup Details, Pre-requisite, guides, and other documentation, always explain:
+
+1. What it does.
+2. Why it is needed.
+3. How to use it.
+
+Use clear headings, bullet points where they help, and step-by-step instructions. Assume the reader is new to the product.
+
+### Test Case Title Standard
+
+A title says what the test checks. The `Name:` value must start with one of these words:
+
+- Verify
+- Validate
+- Check
+- Confirm
+
+Do not write a title as a user action. The gate fails a title that does not start with one of these words.
+
+Good:
+
+- Verify user login with valid credentials
+- Validate successful module compilation
+- Check project build completes without errors
+- Confirm output file is generated successfully
+
+Avoid:
+
+- Login
+- Create User
+- Build Project
+- Upload File
+
+### Test Step Standard
+
+1. Make each step detailed but simple.
+2. Use one action per step. Do not join two actions in one step.
+3. Give enough detail for a new tester to run the test.
+4. Name the screen, the input, the choice, and the action.
+5. Use plain English.
+6. A test case has 6 to 18 steps.
+
+Example:
+
+1. Open the project.
+2. Select the target module.
+3. Enter valid values in all required fields.
+4. Save the changes.
+5. Click Build.
+
+### Expected Result Standard
+
+An expected result must:
+
+- Describe behavior the tester can see.
+- State exactly what should happen.
+- Be easy to check.
+- Have at least 5 words.
+
+Avoid:
+
+- Works correctly
+- Successful
+- No issues found
+
+Good:
+
+- The build completes without errors.
+- A success message is displayed.
+- The output file is generated.
+- The generated file opens without errors.
+
+### Copied Text
+
+Keep text copied from Jira, Confluence, or user answers exactly as it is. Do not rewrite it, and do not count it as a rule break.
+
+### Final Quality Check
+
+Before you save any output, check each item:
+
+- Can a new tester understand the content?
+- Can any sentence be made simpler?
+- Did you remove needless technical terms?
+- Does every test case title start with Verify, Validate, Check, or Confirm?
+- Can every step be run without guessing?
+- Does every expected result say exactly what the tester will see?
+- Do Purpose, Setup Details, and Pre-requisite say what, why, and how?
+- Is the whole output simple and easy to follow?
+
+If any answer is No, rewrite that part. Count the rule breaks you could not fix.
+
+
 ## What this skill does
 
 1. Create a work unit (the engine mints the slug and folder, and makes it active).
@@ -73,6 +236,7 @@ Detect mode from the user's first message before drafting intake:
 
 If both a Jira key and manual story text are present, ask the user which source should be primary
 for this intake session before proceeding.
+Follow the Agent Question Rules in the writing standard: one short, plain question at a time.
 
 After initial prefill, both modes MUST follow the exact same lifecycle: persist intake, resolve
 `[GAP]`s via interview, re-persist with `force: true`, and run Gate 0.
@@ -397,6 +561,8 @@ the chat. Each gap must become a distinct question entry in the tool call. Do no
 bullet points or prose and wait for a reply; always use the tool so the user receives a structured
 prompt they must respond to explicitly.
 
+Follow the Agent Question Rules in the writing standard: one short, plain question at a time.
+
 **Image attachments are welcome**: for any question where a screenshot, diagram, or design mockup
 would help (e.g. UI layout, AC from a screen, design document), tell the user in the question text
 that they may attach an image directly in their chat reply in addition to typing an answer. After
@@ -452,6 +618,14 @@ never embedded as raw prose in derived artifacts. Create it once, early, from th
 - The engine validates `clarifications.md` against contract `clarifications@1` at Gate 1 and Gate 2;
   a malformed log fails those gates.
 
+## Final self-review (required)
+
+Before you save, check your output against the Final Quality Check in the writing standard.
+Fix what you can. Do not change text copied from Jira, Confluence, or user answers.
+Count the rule breaks you could not fix.
+
+Save the final `intake.md` with `persist_artifact` (`force: true`), then run Step 4.
+
 ## Step 4 — Run Gate 0
 
 Count the remaining gaps in the current `intake.md`:
@@ -461,7 +635,9 @@ Count the remaining gaps in the current `intake.md`:
   or the agent marked `[N/A — implementation detail]`, does not count).
 
 Call `check_gate` — `stageId: "intake"`, `metrics: { "criticalGaps": { "value": <N> },
-"nonCriticalGaps": { "value": <M> } }`. Interpret the returned status:
+"nonCriticalGaps": { "value": <M> }, "writingViolations": { "value": <W> } }`. Send the count from
+the Final self-review as "writingViolations": { "value": <N> }. If it is not 0, or you leave it out,
+the result is CONDITIONAL_PASS. Interpret the returned status:
 
 - **PASS** — critical sections populated and no non-critical gaps. The pipeline may advance; hand off
   to `s2t-analyze`.
