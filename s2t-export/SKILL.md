@@ -1,6 +1,6 @@
 ---
 name: s2t-export
-description: "Spec2Test pipeline stage 4 (export). Invoke on approved test-cases to validate export readiness and deliver the xlsx; records export-summary.md."
+description: "Spec2Test pipeline stage 6 (export). Invoke on approved test-cases to validate export readiness and deliver the xlsx; records export-summary.md."
 allowed-tools:
   - spec2test_info
   - persist_artifact
@@ -22,7 +22,7 @@ with the steps below.
 
 ---
 name: s2t-export
-description: "Spec2Test pipeline stage 4 (export). Invoke on approved test-cases to validate export readiness and deliver the xlsx; records export-summary.md."
+description: "Spec2Test pipeline stage 6 (export). Invoke on approved test-cases to validate export readiness and deliver the xlsx; records export-summary.md."
 allowed-tools:
   - spec2test_info
   - persist_artifact
@@ -42,9 +42,9 @@ with the steps below.
 
 ---
 
-# s2t-export — Deliver (Stage 4 of the Spec2Test pipeline)
+# s2t-export — Deliver (Stage 6 of the Spec2Test pipeline)
 
-Use this skill after `s2t-generate` produced approved test cases. It validates export readiness and
+Use this skill after `/s2t-hydrate` passes. It validates export readiness and
 delivers an **xlsx** export. It NEVER creates, modifies, or adds test cases or coverage — validation,
 transformation, and export only.
 
@@ -54,8 +54,8 @@ Drive everything through the engine tools.
 
 Confirm the active unit's `test-cases.md` is ready to export:
 
-- Gate 2 is PASS or approved CONDITIONAL_PASS (the engine also blocks stage 4 and the export tool
-  until this holds).
+- Gate 2 is PASS or approved CONDITIONAL_PASS, and the review and hydrate gates permit advancement (the engine
+  also blocks stage 6 and the export tool until this holds).
 - Every test case has the required export-facing data for the approved xlsx layout (Test Case ID,
   Name, User Story, Test Repository Path, Test Type, Feature Area, Requirement ID, Setup Details,
   Pre-requisite, Purpose, Step Action, Expected Results). For interaction test cases (those whose
@@ -72,7 +72,7 @@ If readiness fails, stop and report the specific failures — do not export.
 Call the `run_export` tool with the format spec `test-cases-xlsx@1`. The engine:
 
 - blocks if `test-cases.md` violates its contract (Principle III),
-- blocks unless the `generate` (Gate 2) gate permits advancement,
+- blocks unless every earlier gate, up to and including `hydrate`, permits advancement,
 - otherwise parses `test-cases.md` and writes `export/test-cases-xlsx@1.xlsx` — a derived,
   **gitignored** deliverable (never committed).
 

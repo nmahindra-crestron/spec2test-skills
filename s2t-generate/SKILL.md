@@ -174,7 +174,7 @@ Call `check_gate` — `stageId: "generate"`, `metrics: { "untracedTestCases": {"
 Interpret the status:
 
 - **PASS** — full coverage, full traceability, no warnings, formatting valid. Hand off to
-  `s2t-export`.
+  `/s2t-pr`.
 - **CONDITIONAL_PASS** — coverage complete but generation warnings remain. Present them; advance only
   after `approve_gate` (`stageId: "generate"`, `approved: true`), or resolve and re-run.
 - **FAIL** — missing mandatory coverage, an untraced test case, a dangling requirement reference, or
@@ -194,6 +194,6 @@ check for the Interaction test-type column, which are unchanged.
   a REQ/BR/VR/approved source — no untraceable coverage.
 - All eight test types (Functional, Negative, Edge, Boundary, Performance, Stress, Exploratory,
   Interaction) are mandatory coverage — none may be skipped or omitted.
-- Do not advance to `s2t-export` until Gate 2 is PASS, or CONDITIONAL_PASS with a recorded approval.
+- Do not advance to `/s2t-pr` until Gate 2 is PASS, or CONDITIONAL_PASS with a recorded approval.
 - No network access.
 

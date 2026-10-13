@@ -25,5 +25,7 @@ compatibility via `spec2test_info`.
 - `s2t-new` — stage 1 (intake)
 - `s2t-analyze` — stage 2 (analysis)
 - `s2t-generate` — stage 3 (test cases)
-- `s2t-export` — stage 4 (xlsx export)
+- `s2t-pr` — stage 4 (review: open the PR)
+- `s2t-rework` — stage 4 (review: sync the PR status)
 - `s2t-hydrate` — stage 5 (memory hydration)
+- `s2t-export` — stage 6 (xlsx export)

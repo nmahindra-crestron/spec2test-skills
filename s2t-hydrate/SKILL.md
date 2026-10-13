@@ -128,7 +128,7 @@ Backfill never authors or merges prose bodies — it only adds leading frontmatt
 
 ## Pipeline mode (stage 5) — hydrate from the active work unit
 
-Use this after `s2t-export` to persist durable behavioral memory from the current change.
+Use this after `/s2t-rework` reports the review gate passed to persist durable behavioral memory from the current change.
 
 1. Read the active unit artifacts `analysis.md` and `test-cases.md`. If either is missing or
    predecessor gates are not advancement-permitting, stop and report the blocking reason.
@@ -141,7 +141,7 @@ Use this after `s2t-export` to persist durable behavioral memory from the curren
    `Hydration Summary`, `Files Created/Merged`, `Domains Touched`, `Validation Result`, `Warnings`.
 6. Persist with `persist_artifact` using `stageId: "hydrate"` (use `force: true` on a rewrite).
 7. Call `check_gate` with `stageId: "hydrate"`.
-   - PASS: hydrate complete.
+   - PASS: hydrate complete. Next: `/s2t-export`.
    - CONDITIONAL_PASS: present non-blocking issues and request explicit approval.
    - FAIL: fix the offending memory files and/or summary, then re-run. A non-conforming memory tree
      (blocking `memory_tree_valid`) FAILs the gate.
