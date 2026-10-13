@@ -19,6 +19,12 @@ Total Requirements Covered:
 Total Business Rules Covered:
 Total Validation Rules Covered:
 
+### Test Case ID Mapping
+
+| Sheet ID | Test Case |
+|----------|-----------|
+| 1 | TC-001 |
+
 ## Validation Results
 
 Requirement Coverage:

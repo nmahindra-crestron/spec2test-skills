@@ -222,10 +222,8 @@ Confirm the active unit's `test-cases.md` is ready to export:
   also blocks stage 6 and the export tool until this holds).
 - Every test case has the required export-facing data for the approved xlsx layout (Test Case ID,
   Name, User Story, Test Repository Path, Test Type, Feature Area, Requirement ID, Setup Details,
-  Pre-requisite, Purpose, Step Action, Expected Results). For interaction test cases (those whose
-  Test Type includes `Interaction`), also confirm `Interaction Type`, `Interaction Ref`, and
-  `Existing Feature(s)` are present; these export into dedicated columns (blank for non-interaction
-  cases). Export never creates or alters coverage — it only validates and transforms.
+  Pre-requisite, Purpose, Step Action, Expected Results). Export never creates or alters coverage —
+  it only validates and transforms.
 - Traceability is intact (each test case traces to REQ/BR/VR/approved source) and Coverage Intent is
   valid and matches its source.
 
@@ -241,6 +239,11 @@ Call the `run_export` tool with the format spec `test-cases-xlsx@1`. The engine:
   **gitignored** deliverable (never committed).
 
 The column set lives entirely in the format spec (content) — changing columns is a content edit.
+
+The sheet has one row per step. Test case fields are on the first row of each test case only.
+Test Case ID is `1, 2, 3 …` in `test-cases.md` order, and Test Type is always `Manual`.
+Interaction Type, Interaction Ref, and Existing Feature(s) stay in `test-cases.md` and are not
+exported.
 
 ### Step 2A — Rename the exported xlsx to include the story identifier
 
@@ -271,6 +274,10 @@ Build `export-summary.md` from this template and persist it as the stage-4 artif
 record of the run; the xlsx itself stays gitignored):
 
 (Use the template in `export-summary-template.md`, included alongside this skill.)
+
+Fill the `Test Case ID Mapping` table: one row per test case, in `test-cases.md` order. Sheet ID is
+the test case's position (1, 2, 3 …); Test Case is its `TC-###`. This is the same order the export
+uses.
 
 Write it with `persist_artifact` — `stageId: "export"` — then `check_gate(stageId: "export")` to
 record the export gate (artifact present + contract valid).

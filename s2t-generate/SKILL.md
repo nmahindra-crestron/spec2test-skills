@@ -241,6 +241,18 @@ Design discipline (authoritative):
   test case declaring that type and referencing that requirement is a **blocking** Gate 2 failure.
   A single workflow-combined case may declare several of the eight types to cover multiple matrix
   cells at once.
+- **Set `Primary Type:` on the line after `Test Types:`.** The export puts it in front of the
+  Name (for example `Negative - Verify ...`). Choose it this way:
+  - Look only at Negative, Interaction, Performance, and Stress in `Test Types`. Stress counts as
+    Performance.
+  - None of them present: leave out the `Primary Type:` line.
+  - One present: use it.
+  - More than one present: count the steps that mainly check each type. Pick the type with the
+    most steps. On a tie, pick Negative, then Interaction, then Performance.
+  - The value must be Negative, Interaction, or Performance, and must be one of the test case's
+    `Test Types` (Stress counts as Performance).
+  - Start the line at column 0 with no bold marks. Gate 2 blocks an indented or bold line. It does
+    not check the value, so the human review at Gate 2 does.
 - If `analysis.md` does not make clear how a mandatory test type applies to a requirement (e.g. no
   performance target, no stress volume, no defined interaction partner), do not guess or invent
   test data — use `vscode_askQuestions` to ask the user for the missing detail before writing that
