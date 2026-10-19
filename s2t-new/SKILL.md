@@ -255,6 +255,18 @@ Call `create_work_unit` with that name as the `title`. The engine allocates a un
 form `YYYY-MM-DD-<6×[A-Z0-9]>`, creates `.spec2test/changes/<slug>/`, and sets it active. All
 subsequent tools act on this active unit. **Never invent a slug or path yourself.**
 
+Create one work unit per story. If the user gives you more than one story, handle them one at a
+time, each in its own work unit.
+
+The project details come from `.spec2test/constitution.md`. Never ask the user for the project
+name, the application or the platforms.
+
+If `create_work_unit` returns "Run /s2t-init first.", stop. Tell the user to run `/s2t-init`, then
+run `/s2t-new` again. Don't create any files.
+
+If `create_work_unit` says "The constitution has problems", stop. Show the user the listed problems
+and tell them to run `/s2t-init` to fix them.
+
 ### Step 1A — Rename the work unit folder (Jira-key mode only)
 
 After `create_work_unit` returns in Jira-key mode, rename the folder to append the Jira issue key
@@ -276,6 +288,9 @@ $state | ConvertTo-Json -Depth 20 | Set-Content "$base\$newSlug\state.json"
 
 Use `$newSlug` as the canonical slug for all subsequent references (intake `Slug:` field, artifact
 paths, etc.). In manual mode, skip this step — the engine slug is used as-is.
+
+The commands above change only `slug`. Keep every other field in `state.json` as it is, including
+`constitutionVersion`.
 
 ## Step 2 — Draft intake.md
 

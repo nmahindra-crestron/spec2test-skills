@@ -64,6 +64,10 @@ steps.
   `Enter a locked user name (RC-001)`.
 - Never update a deprecated test case. Add a new one instead.
 
+For a format 2 unit, the Steps table is the Test Steps table. It must have 6 to 18 steps. Number
+the Setup Steps from 1, and continue the Test Steps from the next number. Never change the Story
+Setup or a Setup Steps row without asking the tester first.
+
 ### New (`NEW_TC`)
 
 Use it when the comment adds a new scenario, a new data variant, a new `REQ` or `BR`, or a new
@@ -120,8 +124,11 @@ new earlier gate makes the generate gate out of date, even if `test-cases.md` di
    - `openGenerationWarnings`: open gaps, conflicts, ambiguities and assumptions carried over as
      Generation Warnings.
    - `writingViolations`: the rule breaks from the Final self-review that you could not fix.
-4. `check_gate` with `stageId: "generate"` and the eight metrics, for example
-   `metrics: { "untracedTestCases": { "value": 0 }, ... }`.
+   - `setupViolations` (format 2 units only): the setup problems you could not fix. A setup
+     problem is a merged setup step, a setup step that tests something, setup steps that don't
+     match the Story Setup, or a Purpose that repeats another test case's Purpose.
+4. `check_gate` with `stageId: "generate"` and the eight metrics (nine for a format 2 unit), for
+   example `metrics: { "untracedTestCases": { "value": 0 }, ... }`.
    - PASS: go on to Step 14.
    - CONDITIONAL_PASS: show the issues and ask the tester one short, plain question: approve or
      fix? Call `approve_gate` only on a clear yes.

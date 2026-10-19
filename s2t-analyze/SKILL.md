@@ -7,6 +7,7 @@ allowed-tools:
   - check_gate
   - approve_gate
   - validate_memory
+  - check_constitution
 ---
 
 You are executing the **s2t-analyze** skill. Perform these steps yourself using the Spec2Test
@@ -29,6 +30,7 @@ allowed-tools:
   - check_gate
   - approve_gate
   - validate_memory
+  - check_constitution
 ---
 
 You are executing the **s2t-analyze** skill. Perform these steps yourself using the Spec2Test
@@ -221,6 +223,23 @@ proceeding, confirm the highest `DEX-###` id you read equals the highest id in t
 blocks `persist_artifact` for the `analysis` stage until the intake gate is PASS or an approved
 CONDITIONAL_PASS (it will name `intake` if you try too early). If no unit is active, stop and tell
 the user to run `s2t-new` or switch to a unit.
+
+## Step 1A — Check the story against the constitution
+
+Call `check_constitution`. If `unitConstitutionVersion` is not set, this is a format 1 unit. Skip
+this step.
+
+Otherwise, read `.spec2test/constitution.md` and compare it with the story:
+
+1. Does the story name an application that is not the constitution's `Application:`?
+2. Does the story name a platform that is not in the constitution's `Platforms:`?
+3. List what a tester must set up before testing this story. Does any setup need have no matching
+   row in Setup Actions?
+
+Add one question to the Step 3 interview for each mismatch and each uncovered setup need. Ask it
+like any other question, and record the answer in `clarifications.md` (Step 3B) with `Target` =
+`general`. Don't change the constitution yourself. If the user wants it changed, tell them to run
+`/s2t-init`.
 
 ## Step 2 — Produce analysis.md
 

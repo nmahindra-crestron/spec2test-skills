@@ -10,6 +10,7 @@ allowed-tools:
   - reopen_unit
   - approve_gate
   - close_rework
+  - check_constitution
 ---
 
 You are executing the **s2t-rework** skill. Perform these steps yourself using the Spec2Test
@@ -35,6 +36,7 @@ allowed-tools:
   - reopen_unit
   - approve_gate
   - close_rework
+  - check_constitution
 ---
 
 You are executing the **s2t-rework** skill. Perform these steps yourself using the Spec2Test
@@ -404,6 +406,20 @@ Fix each stage in the round, in this order, with no pause between stages:
 
 Use each stage's own `stageId` for every save, and pass `rcIds` (the RC IDs behind the change).
 If a stage gate fails, stop and go to Step 15. The round stays open.
+
+### Format 2 units
+
+Before you fix `test-cases.md`, call `check_constitution`. If `unitConstitutionVersion` is not
+set, this is a format 1 unit. Skip this section.
+
+Otherwise:
+
+- If `version` is not the same as `unitConstitutionVersion`, show this note: "The constitution
+  changed after this unit was made (unit version X, now version Y). I kept the Story Setup."
+  Keep the Story Setup as it is.
+- Fix Setup Steps and Test Steps in each test case. Never change the Story Setup or a setup step
+  without asking the tester first. Ask one short, plain question, and change it only on a clear yes.
+- Send `setupViolations` with the other metrics when you run the generate gate.
 
 ## Step 14 — Close the round and sync
 

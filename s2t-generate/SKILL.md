@@ -3,6 +3,7 @@ name: s2t-generate
 description: "Spec2Test pipeline stage 3 (generate). Invoke on an approved analysis to produce traceable test-cases.md and run Gate 2."
 allowed-tools:
   - spec2test_info
+  - check_constitution
   - persist_artifact
   - check_gate
   - approve_gate
@@ -24,6 +25,7 @@ name: s2t-generate
 description: "Spec2Test pipeline stage 3 (generate). Invoke on an approved analysis to produce traceable test-cases.md and run Gate 2."
 allowed-tools:
   - spec2test_info
+  - check_constitution
   - persist_artifact
   - check_gate
   - approve_gate
@@ -216,13 +218,79 @@ Read `analysis.md` from the **active work unit**. You need not re-check Gate 1: 
 `persist_artifact` for the `generate` stage until the analysis gate is PASS or approved
 CONDITIONAL_PASS (it names `analysis` if you try too early).
 
+## Step 1A — Pick the test-case format
+
+Call `check_constitution`. Look at `unitConstitutionVersion` in the result.
+
+- **No `unitConstitutionVersion`**: this is a format 1 unit. Skip Step 1B. In Step 2, use the
+  format 1 template and the format 1 rules. Don't add a Story Setup.
+- **`unitConstitutionVersion` is set**: this is a format 2 unit. If `exists` is false or `valid`
+  is false, stop. Tell the user: "Run /s2t-init first." Otherwise go on to Step 1B.
+
+## Step 1B — Agree on the Story Setup (format 2 only)
+
+If `test-cases.md` already has a `## Story Setup` section, show it to the user and ask:
+**Keep or Edit?** On Keep, use it as it is and go to Step 2. On Edit, build a new one as below.
+
+To build the Story Setup:
+
+1. Read `.spec2test/constitution.md`.
+2. Start from `Setup Details:`, `Pre-requisite:` and `Default Actions:` in Story Setup Defaults.
+3. For each action in `Default Actions`, take its row from Setup Actions. Fill each `<placeholder>`
+   with its value from Placeholder Defaults. Fill the rest from the story.
+4. Fit the setup to the story. Add a Setup Action only if the story needs it. Drop what the story
+   doesn't need.
+5. If `version` is not the same as `unitConstitutionVersion`, show this note: "The constitution
+   changed after this unit was made (unit version X, now version Y). I used the current version."
+   Use the current constitution. Don't change the unit's version.
+6. Show the Story Setup (Setup Details and Pre-requisite) and ask: **Yes, Edit or Not applicable?**
+   - **Yes**: use it.
+   - **Edit**: ask what to change, change only that part, show it again and ask again. Repeat
+     until the user picks Yes or Not applicable.
+   - **Not applicable**: set `Setup Details: None`. Keep the usual Pre-requisite from the
+     constitution. Write no Setup Steps in any test case, and start Test Steps at 1.
+
+After the user agrees, never change the Story Setup or any setup step without asking first.
+
 ## Step 2 — Design and write test-cases.md
 
-Build `test-cases.md` from this template:
+For a format 1 unit, build `test-cases.md` from this template:
 
 (Use the template in `test-cases-template.md`, included alongside this skill.)
 
-Design discipline (authoritative):
+For a format 2 unit, build `test-cases.md` from this template instead. Read the format 2 rules
+below first.
+
+(Use the template in `test-cases-template-v2.md`, included alongside this skill.)
+
+### Format 2 rules
+
+These rules replace the format 1 setup rules (Common Setup Library, `Setup Details` in each test
+case, `### Pre-requisite` and `### Steps`).
+
+- Write one `## Story Setup` section with `Setup Details:` and `Pre-requisite:`. Either may be
+  "None". Don't write a Common Setup Library.
+- Don't write `Setup Details:` or `### Pre-requisite` in a test case.
+- **Setup Steps**: merge the Story Setup into 1 or 2 steps. Each merged step has one combined
+  expected result. Then add any extra setup that only this test needs. Put extra setup only in that
+  test's Setup Steps. Never test anything in a setup step. Number setup steps from 1.
+- **Test Steps**: 6 to 18 rows. Setup steps don't count. Go on numbering from the last setup step.
+  With no setup steps, start at 1. Every test case must have a Test Steps table.
+- **Purpose**: one "Verify …" sentence, plus optional scope bullets. Each Purpose must be unique in
+  the story.
+- Leave `Feature Area:` blank. Keep `Requirement(s):` so Gate 2 can check coverage.
+
+**Setup self-check (format 2)**: before you save, check every test case against these four rules.
+Count every break as one setup violation:
+
+1. A merged setup step has more than one expected result.
+2. A setup step tests something.
+3. The setup steps don't match the Story Setup.
+4. A Purpose repeats another test case's Purpose.
+
+Fix what you can. Name each rule you could not fix in Generation Warnings.
+
+### Design discipline (both formats)
 
 - Prefer **workflow-oriented** test cases that combine related REQ/BR/VR; minimize count while
   maximizing coverage. Do not generate one test case per requirement.
@@ -299,7 +367,7 @@ Design discipline (authoritative):
   fields at line start with no bold markers (parser-critical, like `Name:`). This carry-through is
   **advisory**: a missing expansion never FAILs Gate 2 (see Step 3).
 - Test data must be concrete; expected results observable; steps reproducible.
-- **Steps count rule**: every test case's `### Steps` table must have **6 to 18 data rows**
+- **Steps count rule (format 1)**: every test case's `### Steps` table must have **6 to 18 data rows**
   (aim for 6-7; the header and separator rows are not counted).
   Gate 2 enforces these bounds and fails below 6 or above 18. Each row is one `Action` paired with a
   non-empty, observable `Expected Result` — never leave `Expected Result` blank (a blank cell is a
@@ -312,7 +380,7 @@ Design discipline (authoritative):
   `Pre-requisite`, `Purpose`, and a `Steps` table that keeps `Action` and `Expected Result` as
   distinct columns.
 
-**Setup Details rule**: the `Setup Details` field in every test case must contain a human-readable
+**Setup Details rule (format 1)**: the `Setup Details` field in every test case must contain a human-readable
 inline description of the setup steps — never just a reference token such as `SETUP-001`. Copy or
 summarise the relevant steps from the Common Setup Library inline. The export parser reads this
 field directly; a bare token is not useful to a tester.
@@ -359,6 +427,8 @@ to the gate:
 - `writingViolations` = the count of rule breaks from the Final self-review.
   Send the count as "writingViolations": { "value": <N> }. If it is not 0, or you leave it out,
   the result is CONDITIONAL_PASS.
+- `setupViolations` (format 2 only) = the count from the setup self-check. Send it as
+  "setupViolations": { "value": <N> }. If it is not 0, or you leave it out, Gate 2 fails.
 
 Call `check_gate` — `stageId: "generate"`, `metrics: { "untracedTestCases": {"value": N}, ... }`.
 Interpret the status:
@@ -380,6 +450,7 @@ check for the Interaction test-type column, which are unchanged.
 ## Rules
 
 - Operate only on the active unit; use `force: true` to update `test-cases.md`.
+- Format 2: never change the Story Setup or a setup step without asking the user first.
 - Never invent requirements; every test case (including Exploratory and Interaction) must trace to
   a REQ/BR/VR/approved source — no untraceable coverage.
 - All eight test types (Functional, Negative, Edge, Boundary, Performance, Stress, Exploratory,

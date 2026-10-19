@@ -235,8 +235,13 @@ Call the `run_export` tool with the format spec `test-cases-xlsx@1`. The engine:
 
 - blocks if `test-cases.md` violates its contract (Principle III),
 - blocks unless every earlier gate, up to and including `hydrate`, permits advancement,
-- otherwise parses `test-cases.md` and writes `export/test-cases-xlsx@1.xlsx` — a derived,
+- otherwise parses `test-cases.md` and writes the xlsx under `export/` — a derived,
   **gitignored** deliverable (never committed).
+
+The tool returns `exportPath`. Always use that path. Don't assume a fixed file name. A unit made
+with a constitution uses format 2, so the engine writes `test-cases-xlsx@2.xlsx` instead. Format 2
+puts the Story Setup's Setup Details and Pre-requisite on each test case's first row. It numbers
+the Setup Steps and Test Steps together from 1, and leaves Feature Area and Requirement ID blank.
 
 The column set lives entirely in the format spec (content) — changing columns is a content edit.
 
@@ -254,13 +259,14 @@ title in manual mode). Run these terminal commands (substitute actual values):
 ```
 $exportDir = ".spec2test\changes\<slug>\export"
 $storyId   = "<Jira issue key or change title>"    # e.g. CONSIM-2617
-$src  = "$exportDir\test-cases-xlsx@1.xlsx"
+$src  = "<exportPath returned by run_export>"
 $dest = "$exportDir\test-cases-$storyId.xlsx"
 
 Rename-Item $src $dest
 ```
 
-Use `$dest` as the output path in the export-summary.md `Output File` field.
+Tell the user the final path (`$dest`). Use `$dest` as the output path in the export-summary.md
+`Output File` field.
 
 ## Final self-review (required)
 
