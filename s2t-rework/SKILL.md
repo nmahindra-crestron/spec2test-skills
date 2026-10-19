@@ -263,6 +263,8 @@ Use `assets/status-map.md`:
 - **PR Status**: the first row that matches `state`, `isDraft` and `reviewDecision` gives `Status:`.
 - **Reviewer Decision**: for each Reviewers row, take that handle's latest review and map its state.
   A reviewer with no review yet is `PENDING`.
+- If the review gate result is `CONDITIONAL_PASS` because nobody approved, show "No reviewer approved
+  this pull request. Continue anyway?". On Yes, record the approval with today's date. On No, stop.
 
 ## Step 5 — Update the commit and fingerprint
 
@@ -449,5 +451,6 @@ Then go to Step 15.
 - Push only `.spec2test/changes/<slug>/*.md`. Never commit `export/`.
 - The reviewer limits and the approval count live only in the review gate. Report what
   `check_gate` says.
-- `approve_gate` cannot pass a failed review gate. Only approvals on the PR can.
+- During this temporary no-reviewer workflow, a `CONDITIONAL_PASS` warning can be confirmed by the
+  tester after self-merging.
 

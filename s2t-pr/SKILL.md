@@ -231,22 +231,24 @@ Call `check_ready` with `stageId: "review"`. If `ready` is false, show its `mess
 ## Step 3 — Ask for reviewers
 
 Ask the tester for the reviewers, each as a Name and a GitHub handle. You may suggest owners from
-`CODEOWNERS`, but the tester must confirm each one. Check the list, and ask again on any problem:
+`CODEOWNERS`, but the tester must confirm each one. An empty reviewer list is allowed for this
+temporary no-reviewer workflow; do not ask again. Check the list, and ask again on any problem:
 Follow the Agent Question Rules in the writing standard: one short, plain question at a time.
 
 - A handle listed twice → "<handle> is listed twice."
 - The submitter's handle → "You opened this PR, so you can't review it."
 - No access: `gh api repos/{owner}/{repo}/collaborators/{handle}` fails → "<handle> has no access to
   this repo."
-- An empty list → ask again; there is nobody to add.
+- An empty list → continue with no reviewers; this is allowed temporarily.
 
 Do not check how many reviewers there are. The review gate checks the count and reports it.
 
 ## Step 4 — Required reviewers and target branch
 
-Ask which reviewers are required (Yes/No each), and the target branch. The default target is the
-repo's default branch (`gh repo view --json defaultBranchRef --jq .defaultBranchRef.name`).
-Follow the Agent Question Rules in the writing standard: one short, plain question at a time.
+Ask which reviewers are required (Yes/No each), and the target branch. If the reviewer list is
+empty, skip the required-reviewers question and continue. The default target is the repo's default
+branch (`gh repo view --json defaultBranchRef --jq .defaultBranchRef.name`). Follow the Agent
+Question Rules in the writing standard: one short, plain question at a time.
 
 ## Step 5 — Commit and push the unit's markdown files
 
@@ -266,6 +268,7 @@ git push -u origin s2t/<slug>
 
 - `gh pr create --base <target> --head s2t/<slug> --title "<slug>: test cases for review" --body "<short summary>"`.
   Open it ready for review, never as a draft.
+- If the reviewer list is empty, skip adding reviewers and continue.
 - For each reviewer: `gh pr edit <number> --add-reviewer <handle>`.
 - Record the PR URL, number and head commit (`git rev-parse HEAD`). On a `gh` error, show it and
   stop.
@@ -293,9 +296,8 @@ Count the rule breaks you could not fix.
 
 ## Step 9 — Run the review gate
 
-Call `check_gate` with `stageId: "review"`. A FAIL is expected now: nobody has approved yet. Tell
-the tester: "PR opened. Wait for reviews, then run `/s2t-rework`." If the gate names a problem other
-than the status or approvals (for example the reviewer count), report it as well.
+Call `check_gate` with `stageId: "review"`. While the PR is still open, a FAIL is expected. After
+it is merged, a CONDITIONAL_PASS is expected if nobody approved. Tell the tester: "PR opened with no reviewers. Merge it yourself, then run `/s2t-rework`." If the gate names a problem other than the status or approvals (for example the reviewer count), report it as well.
 
 ## Rules
 
@@ -305,5 +307,5 @@ than the status or approvals (for example the reviewer count), report it as well
 - Commit only `.spec2test/changes/<slug>/*.md`. Never commit `export/`.
 - The reviewer limits and the approval count live only in the review gate. Report what
   `check_gate` says; do not repeat or invent numbers.
-- `approve_gate` cannot pass a failed review gate. Only approvals on the PR can.
+- During this temporary no-reviewer workflow, the tester can confirm the warning after self-merging.
 
