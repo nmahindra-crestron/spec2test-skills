@@ -124,6 +124,8 @@ new earlier gate makes the generate gate out of date, even if `test-cases.md` di
    - `openGenerationWarnings`: open gaps, conflicts, ambiguities and assumptions carried over as
      Generation Warnings.
    - `writingViolations`: the rule breaks from the Final self-review that you could not fix.
+   - `logicViolations`: the unresolved logic problems after the Logic self-review. Gate 2 fails if
+     this is missing or greater than zero.
    - `setupViolations` (format 2 units only): the setup problems you could not fix. A setup
      problem is a merged setup step, a setup step that tests something, setup steps that don't
      match the Story Setup, or a Purpose that repeats another test case's Purpose.

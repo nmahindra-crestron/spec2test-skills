@@ -1,6 +1,6 @@
 ---
 name: s2t-pr
-description: "Spec2Test pipeline stage 4 (review). Invoke after Gate 2 passes to commit the work unit's markdown files, open a GitHub PR with reviewers, and record pr-review.md."
+description: "Spec2Test pipeline stage 5 (review). Invoke after the quality gate passes to commit the work unit's markdown files, open a GitHub PR with reviewers, and record pr-review.md."
 allowed-tools:
   - spec2test_info
   - check_ready
@@ -22,7 +22,7 @@ with the steps below.
 
 ---
 name: s2t-pr
-description: "Spec2Test pipeline stage 4 (review). Invoke after Gate 2 passes to commit the work unit's markdown files, open a GitHub PR with reviewers, and record pr-review.md."
+description: "Spec2Test pipeline stage 5 (review). Invoke after the quality gate passes to commit the work unit's markdown files, open a GitHub PR with reviewers, and record pr-review.md."
 allowed-tools:
   - spec2test_info
   - check_ready
@@ -43,9 +43,9 @@ with the steps below.
 
 ---
 
-# s2t-pr — Open a PR for review (Stage 4 of the Spec2Test pipeline)
+# s2t-pr — Open a PR for review (Stage 5 of the Spec2Test pipeline)
 
-Use this skill after `/s2t-generate` passes. It commits the work unit's markdown files to a branch,
+Use this skill after `/s2t-quality` passes. It commits the work unit's markdown files to a branch,
 opens a GitHub pull request, adds the reviewers, and records `pr-review.md` and an empty
 `review-comments.md`. The review gate then waits for approval.
 
@@ -218,8 +218,9 @@ If any answer is No, rewrite that part. Count the rule breaks you could not fix.
 
 ## Step 1 — Check the earlier gates
 
-Call `check_ready` with `stageId: "review"`. If `ready` is false, show its `message`, say
-"Run `/s2t-generate`.", and stop. Keep the result: step 7 needs `fingerprints["test-cases.md"]`.
+Call `check_ready` with `stageId: "review"`. If `ready` is false, show its `message`. If the
+message names the quality stage, say "Run `/s2t-quality`."; otherwise say "Run `/s2t-generate`.".
+Then stop. Keep the result: step 7 needs `fingerprints["test-cases.md"]`.
 
 ## Step 2 — Find the submitter
 

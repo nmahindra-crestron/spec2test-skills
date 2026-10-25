@@ -185,6 +185,46 @@ Memory Source for any user-named interaction. A zero-row table is valid — cove
 |----------------|------------------|---------------|-------------------|------------------|------|--------|-----------|----------------|-------------------|-----------------|
 | INT-001 | | | | Direct | Medium | | | | | |
 
+## Edge Case Decisions
+
+Every risky input, dialog, or action must have an `EDGE-###` row before Gate 1 can pass. A row that stays `UNKNOWN` is blocking.
+
+| EDGE ID | Item | Case | Decision | Expected Behavior | CLR |
+|---------|------|------|----------|-------------------|-----|
+| EDGE-001 | | | DECIDED | | |
+
+## State Dependencies
+
+Any behavior whose result depends on the current state must define all relevant starting states and the expected outcome for each one.
+
+| BHV ID | Behavior | Starting States | Expected Result per State |
+|--------|----------|----------------|---------------------------|
+| BHV-001 | | | |
+
+## Comparison Method
+
+When a requirement says the behavior must match the old product or previous behavior, the analysis must record the same start state, event sequence, and comparison method.
+
+| REQ | Old Product | Start State | Event Sequence | Record After Each Event | Compare |
+|-----|-------------|-------------|----------------|--------------------------|---------|
+| REQ-001 | | | | | |
+
+## Performance Targets
+
+Performance and stress requirements must be numeric, measurable, and include an explicit unit and environment when relevant.
+
+| REQ | Measure | Target | Unit | Data Size | Machine | CLR |
+|-----|---------|--------|------|-----------|---------|-----|
+| REQ-001 | | | | | | |
+
+## Data Preservation
+
+Copy, paste, save/reopen, import, and undo/redo behaviors must record the data being kept, the named source file, the compare method, and whether the data is rechecked after reopen.
+
+| BHV ID | Action | Test Data | Source File | Compare | Recheck After Reopen |
+|--------|--------|-----------|-------------|---------|----------------------|
+| BHV-001 | | | | | |
+
 ## Risk Assessment
 
 ### High Risk

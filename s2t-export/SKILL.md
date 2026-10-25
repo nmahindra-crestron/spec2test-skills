@@ -1,6 +1,6 @@
 ---
 name: s2t-export
-description: "Spec2Test pipeline stage 6 (export). Invoke on approved test-cases to validate export readiness and deliver the xlsx; records export-summary.md."
+description: "Spec2Test pipeline stage 7 (export). Invoke on approved test-cases to validate export readiness and deliver the xlsx; records export-summary.md."
 allowed-tools:
   - spec2test_info
   - persist_artifact
@@ -22,7 +22,7 @@ with the steps below.
 
 ---
 name: s2t-export
-description: "Spec2Test pipeline stage 6 (export). Invoke on approved test-cases to validate export readiness and deliver the xlsx; records export-summary.md."
+description: "Spec2Test pipeline stage 7 (export). Invoke on approved test-cases to validate export readiness and deliver the xlsx; records export-summary.md."
 allowed-tools:
   - spec2test_info
   - persist_artifact
@@ -42,7 +42,7 @@ with the steps below.
 
 ---
 
-# s2t-export — Deliver (Stage 6 of the Spec2Test pipeline)
+# s2t-export — Deliver (Stage 7 of the Spec2Test pipeline)
 
 Use this skill after `/s2t-hydrate` passes. It validates export readiness and
 delivers an **xlsx** export. It NEVER creates, modifies, or adds test cases or coverage — validation,
@@ -219,7 +219,7 @@ If any answer is No, rewrite that part. Count the rule breaks you could not fix.
 Confirm the active unit's `test-cases.md` is ready to export:
 
 - Gate 2 is PASS or approved CONDITIONAL_PASS, and the review and hydrate gates permit advancement (the engine
-  also blocks stage 6 and the export tool until this holds).
+  also blocks stage 7 and the export tool until this holds).
 - Every test case has the required export-facing data for the approved xlsx layout (Test Case ID,
   Name, User Story, Test Repository Path, Test Type, Feature Area, Requirement ID, Setup Details,
   Pre-requisite, Purpose, Step Action, Expected Results). Export never creates or alters coverage —

@@ -1,6 +1,6 @@
 ---
 name: s2t-hydrate
-description: "Spec2Test hydrate. Pipeline stage 5, plus ingest (folder / Jira) and backfill modes to build project memory at docs/s2t-memory/."
+description: "Spec2Test hydrate. Pipeline stage 6, plus ingest (folder / Jira) and backfill modes to build project memory at docs/s2t-memory/."
 allowed-tools:
   - spec2test_info
   - validate_memory
@@ -24,7 +24,7 @@ with the steps below.
 
 ---
 name: s2t-hydrate
-description: "Spec2Test hydrate. Build and maintain project memory at docs/s2t-memory/ in three modes — pipeline (stage 5), ingest (folder of markdown or a Jira ticket), and backfill (add routing frontmatter). Every run ends by validating the tree with validate_memory."
+description: "Spec2Test hydrate. Build and maintain project memory at docs/s2t-memory/ in three modes — pipeline (stage 6), ingest (folder of markdown or a Jira ticket), and backfill (add routing frontmatter). Every run ends by validating the tree with validate_memory."
 allowed-tools:
   - spec2test_info
   - validate_memory
@@ -233,7 +233,7 @@ Route to exactly one mode from the invocation arguments:
 | The literal keyword `backfill` | **Backfill** |
 | A folder path (an existing directory) | **Ingest (folder)** |
 | A Jira ticket key (e.g. `PROJ-123`) | **Ingest (Jira)** |
-| No arguments (active work unit present) | **Pipeline** (stage 5) |
+| No arguments (active work unit present) | **Pipeline** (stage 6) |
 
 Rules:
 - Reject **mixed-mode** invocations (arguments that classify to more than one mode) with a clear
@@ -298,7 +298,7 @@ Backfill never authors or merges prose bodies — it only adds leading frontmatt
 
 ---
 
-## Pipeline mode (stage 5) — hydrate from the active work unit
+## Pipeline mode (stage 6) — hydrate from the active work unit
 
 Use this after `/s2t-rework` reports the review gate passed to persist durable behavioral memory from the current change.
 

@@ -1,6 +1,6 @@
 ---
 name: s2t-rework
-description: "Spec2Test pipeline stage 4 (review sync). Invoke after /s2t-pr to push unit changes, read the PR status and reviews from GitHub, update pr-review.md and review-comments.md, and re-run the review gate."
+description: "Spec2Test pipeline stage 5 (review sync). Invoke after /s2t-pr to push unit changes, read the PR status and reviews from GitHub, update pr-review.md and review-comments.md, and re-run the review gate."
 allowed-tools:
   - spec2test_info
   - check_ready
@@ -26,7 +26,7 @@ with the steps below.
 
 ---
 name: s2t-rework
-description: "Spec2Test pipeline stage 4 (review sync). Invoke after /s2t-pr to push unit changes, read the PR status and reviews from GitHub, update pr-review.md and review-comments.md, and re-run the review gate."
+description: "Spec2Test pipeline stage 5 (review sync). Invoke after /s2t-pr to push unit changes, read the PR status and reviews from GitHub, update pr-review.md and review-comments.md, and re-run the review gate."
 allowed-tools:
   - spec2test_info
   - check_ready
@@ -52,14 +52,15 @@ Otherwise, continue with the steps below.
 
 ---
 
-# s2t-rework — Sync the PR review (Stage 4 of the Spec2Test pipeline)
+# s2t-rework — Sync the PR review (Stage 5 of the Spec2Test pipeline)
 
 Use this skill after `/s2t-pr` opened the PR, and again after each round of reviews or fixes. It
 pushes the unit's changes, reads the PR status and comments from GitHub, posts queued replies,
 helps the tester triage each comment, and opens a rework round. There is no `/s2t-pr sync`; this
 skill is the sync step.
 
-This skill also applies the comments to the unit's files and pushes them to the same PR.
+This skill also applies the comments to the unit's files and pushes them to the same PR. It ends by
+updating the shared lessons file (see "Lessons" below).
 
 You run `git` and `gh` in the terminal. The engine never touches the network. If `gh` is missing
 or not logged in, stop and point the tester to `SETUP.md`.
@@ -386,7 +387,7 @@ If any comment has a Decision that changes a stage file, and no rework round is 
 `reopen_unit`:
 
 - `round`: the next round number;
-- `fromStage`: the earliest stage in any Target Stages; `toStage`: `generate`;
+- `fromStage`: the earliest stage in any Target Stages; `toStage`: `quality`;
 - `reason`: the RC IDs, for example `RC-001, RC-003`.
 
 If a round is already open, do not open a second one. New comments wait for the next round.
@@ -403,6 +404,10 @@ Fix each stage in the round, in this order, with no pause between stages:
    again in this round.
 3. `generate`: follow `assets/fix-test-cases.md` if any comment targets it, or if an earlier gate
    ran again in this round.
+4. `quality`: the changed tests need a fresh quality review. Call `check_ready` with
+   `stageId: "review"`. If `ready` is false and its message names the quality stage, stop and say:
+   "Round <n> is still open. Run `/s2t-quality` in a new chat to review the changed tests, then run
+   `/s2t-rework` again." Go to Step 15. Never run the quality gate without that review.
 
 Use each stage's own `stageId` for every save, and pass `rcIds` (the RC IDs behind the change).
 If a stage gate fails, stop and go to Step 15. The round stays open.
@@ -458,6 +463,29 @@ Then go to Step 15.
 - If a round is open and was not applied in this run: "Round <n> is open for <RC IDs>."
 - If changes were requested: "Re-run the affected stage skill (for example `/s2t-generate`), then
   `/s2t-rework` again."
+- List any new or updated `PROPOSED` lessons from the Lessons step, and ask the tester to adopt or
+  reject each one.
+
+## Lessons
+
+Do this before the Step 15 report, after any triage. It turns mistakes that reviewers find again
+and again into a shared rule.
+
+1. Read `review-comments.md` from every unit folder in `.spec2test/changes/`.
+2. Group the comments in Triage & Resolution by `Category` (for example `MISSING_REQ`). Skip
+   comments whose Decision is `NO_CHANGE` or `REJECTED_WITH_REASON`.
+3. A category found in 2 or more units becomes a lesson.
+4. Update `.spec2test/lessons.md` yourself; the engine saves files only inside a unit. If the file
+   is missing, create it with a `## Lesson Log` heading and this header:
+   `| Lesson ID | Rule | Category | Seen In | Count | Status |`.
+   - `Lesson ID`: the next `LSN-###`. Keep the ID of an existing row with the same `Rule`.
+   - `Rule`: the comment category. `Category`: `review`.
+   - `Seen In`: each unit slug with its RC IDs, for example `2026-10-25-XYZ789: RC-001, RC-004`.
+     Separate units with `;`.
+   - `Count`: the number of units in `Seen In`.
+   - `Status`: `PROPOSED` for a new row. Keep the status of an existing row.
+
+Never set a lesson to `ADOPTED` or `REJECTED`. The tester decides.
 
 ## Rules
 

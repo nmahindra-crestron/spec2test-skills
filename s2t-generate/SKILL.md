@@ -212,6 +212,72 @@ Before you save any output, check each item:
 If any answer is No, rewrite that part. Count the rule breaks you could not fix.
 
 
+## Logic standard (required)
+
+Use this checklist for every generated case and every later logic review. Review each step against
+these rules before the gate can pass.
+
+# Test Logic Standard
+
+Use this checklist for the generate self-review and for later logic review. Review each test case one step at a time. Count each unresolved issue as one logic violation.
+
+## LOGIC-01 — State walk must be explicit
+
+Each step must follow the state that existed before it. The next step must make sense from the previous action and the expected result, not from a hidden assumption.
+
+- If a test jumps from one state to another without showing how, mark it.
+- If a step expects a value or screen that the prior step never created, mark it.
+- If the setup or action leaves the system in an unknown state, mark it.
+
+## LOGIC-02 — The step must create a visible change
+
+Every action should produce an observable result. If the step does nothing visible, or the expected result is just a restatement of the action, the step is weak.
+
+- A good step checks a user-visible effect.
+- A weak step says the same thing twice without adding evidence.
+- A step that only re-labels the action, clicks a button with no visible outcome, or checks the same state again is a logic problem.
+
+## LOGIC-03 — Created before used
+
+Any item the tester uses must exist before it is used. If the test depends on a record, state, value, or screen that is not created earlier in the flow, it breaks this rule.
+
+- If the test expects a saved file, record, or screen state before the setup or prior steps create it, mark it.
+- If the step assumes data was already set without showing that setup, mark it.
+
+## LOGIC-04 — One failing condition at a time
+
+Each step should check one clear condition or outcome. Do not mix unrelated assertions into the same step.
+
+- A step should not check both success and failure at once unless the test specifically intends a branch.
+- A step should not demand several unrelated changes in the same action.
+- If one step tries to prove too many outcomes, it is a logic violation.
+
+## LOGIC-05 — Safe setup only
+
+The setup must support the test without changing something under test or leaving another item incomplete or in conflict.
+
+- Do not add setup that changes the product state being tested.
+- Do not create setup that leaves a related item unfinished, conflicting, or hidden from the test.
+- If the setup is not needed for the scenario, drop it or count it as a setup violation.
+
+## LOGIC-06 — Analysis decisions must carry through
+
+Each step must match the approved analysis and the story context. Do not invent values, states, limits, or workflow order that the analysis did not support.
+
+- Use the real requirement, business rule, validation rule, and edge-case decisions from analysis.md.
+- Do not guess a performance target, state transition, or interaction detail.
+- If the analysis is vague or missing, ask the user instead of inventing the logic.
+
+## Review rule
+
+Fix a logic issue when the fix keeps the scenario intent and does not hide a real defect. If it cannot be fixed safely, record a Generation Warning with the test case, step, and the rule ID.
+
+
+Before generating or re-checking a test case, read `.spec2test/lessons.md` if it exists and collect
+all rows whose `Status: ADOPTED`. Treat each adopted lesson as an extra checklist item during the
+logic self-review and generation warnings. A lesson is not a replacement for the standard rules; it
+adds another required rule for this unit.
+
 ## Step 1 — Read the approved analysis
 
 Read `analysis.md` from the **active work unit**. You need not re-check Gate 1: the engine blocks
@@ -280,13 +346,14 @@ case, `### Pre-requisite` and `### Steps`).
   the story.
 - Leave `Feature Area:` blank. Keep `Requirement(s):` so Gate 2 can check coverage.
 
-**Setup self-check (format 2)**: before you save, check every test case against these four rules.
+**Setup self-check (format 2)**: before you save, check every test case against these five rules.
 Count every break as one setup violation:
 
 1. A merged setup step has more than one expected result.
 2. A setup step tests something.
 3. The setup steps don't match the Story Setup.
 4. A Purpose repeats another test case's Purpose.
+5. The setup changes something under test, or leaves another item incomplete or in conflict.
 
 Fix what you can. Name each rule you could not fix in Generation Warnings.
 
@@ -296,6 +363,9 @@ Fix what you can. Name each rule you could not fix in Generation Warnings.
   maximizing coverage. Do not generate one test case per requirement.
 - Every test case traces to at least one REQ/BR/VR/approved source; every referenced `REQ-xxx`
   exists in `analysis.md`. Requirements are never invented.
+- Carry forward the explicit analysis decisions from `analysis.md`: edge-case decisions, state
+  dependencies, comparison methods, performance targets, and data-preservation rows. Do not generate
+  tests against unresolved or vague analysis records.
 - Cover Coverage Intent per the analysis matrix; satisfy Enumerated Value Inventory (FULL) and
   Behavioral Coverage Inventory; generate boundary coverage for validation limits.
 - **All eight test types are mandatory for every requirement — no skipping**: Functional,
@@ -412,6 +482,22 @@ Count the rule breaks you could not fix.
 Write it with `persist_artifact` — `stageId: "generate"`, `content: <the filled markdown>`. On
 regeneration/interview rewrites, pass **`force: true`**.
 
+## Logic self-review (required)
+
+After the writing self-review, walk every generated test case against the Logic standard. Review each
+step in order and fix safe issues first. If a problem remains, record a Generation Warning that names
+the test case, the step, and the LOGIC rule ID.
+
+- Count unresolved logic problems as `logicViolations`.
+- If a problem can be fixed without changing the scenario intent, fix it before saving.
+- If it cannot be fixed safely, list the issue in Generation Warnings and keep the count in the gate
+  metric.
+- Check every adopted lesson too. In your report, list each one by its `LSN` ID with its rule and
+  result, for example `LSN-001 (LOGIC-03): checked, no problem`. A problem against a lesson counts
+  as a logic violation.
+- If a lesson should become an engine check, suggest that the tester opens a spec for it. Do not
+  open one yourself.
+
 ## Step 3 — Run Gate 2
 
 Complete the Gate 2 Result + Coverage Validation sections, then compute these metrics and hand them
@@ -427,6 +513,8 @@ to the gate:
 - `writingViolations` = the count of rule breaks from the Final self-review.
   Send the count as "writingViolations": { "value": <N> }. If it is not 0, or you leave it out,
   the result is CONDITIONAL_PASS.
+- `logicViolations` = the count of unresolved logic problems from the Logic self-review. Send it as
+  "logicViolations": { "value": <N> }. If it is not 0, or you leave it out, Gate 2 fails.
 - `setupViolations` (format 2 only) = the count from the setup self-check. Send it as
   "setupViolations": { "value": <N> }. If it is not 0, or you leave it out, Gate 2 fails.
 
@@ -434,7 +522,7 @@ Call `check_gate` — `stageId: "generate"`, `metrics: { "untracedTestCases": {"
 Interpret the status:
 
 - **PASS** — full coverage, full traceability, no warnings, formatting valid. Hand off to
-  `/s2t-pr`.
+  `/s2t-quality`.
 - **CONDITIONAL_PASS** — coverage complete but generation warnings remain. Present them; advance only
   after `approve_gate` (`stageId: "generate"`, `approved: true`), or resolve and re-run.
 - **FAIL** — missing mandatory coverage, an untraced test case, a dangling requirement reference, or
@@ -455,6 +543,6 @@ check for the Interaction test-type column, which are unchanged.
   a REQ/BR/VR/approved source — no untraceable coverage.
 - All eight test types (Functional, Negative, Edge, Boundary, Performance, Stress, Exploratory,
   Interaction) are mandatory coverage — none may be skipped or omitted.
-- Do not advance to `/s2t-pr` until Gate 2 is PASS, or CONDITIONAL_PASS with a recorded approval.
+- Do not advance to `/s2t-quality` until Gate 2 is PASS, or CONDITIONAL_PASS with a recorded approval.
 - No network access.
 

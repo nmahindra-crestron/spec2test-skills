@@ -241,6 +241,14 @@ like any other question, and record the answer in `clarifications.md` (Step 3B) 
 `general`. Don't change the constitution yourself. If the user wants it changed, tell them to run
 `/s2t-init`.
 
+## Step 1B — Read adopted lessons
+
+If `.spec2test/lessons.md` exists, read its `Lesson Log` table and collect every row with
+`Status: ADOPTED`. Each one is an extra checklist item for this analysis. Use it when you fill the
+coverage tables and plan the interview. If a lesson needs a fact you do not have, add a question
+for it to the Step 3 interview. Never edit `lessons.md` in this skill. If a lesson should become
+an engine check, suggest that the tester opens a spec for it. Do not open one yourself.
+
 ## Step 2 — Produce analysis.md
 
 Build `analysis.md` from this template, filling it from the intake plus documented evidence:
@@ -259,6 +267,10 @@ Core discipline (authoritative):
 - Populate the mandatory inventories (Enumerated Value Inventory `INV`, Behavioral Coverage
   Inventory `BHV`) and Coverage Hardening Signals; missing evidence creates a Requirement Gap and a
   Clarification Question, not a Requirement.
+- **Required analysis pattern sections**: every analysis must include `## Edge Case Decisions`,
+  `## State Dependencies`, `## Comparison Method`, `## Performance Targets`, and `## Data
+  Preservation`. These sections are part of the source-of-truth design record and Gate 1 blocks any
+  unresolved edge, state, comparison, performance, or data-preservation gap.
 - Hidden Test Opportunities are **advisory only** — never in the Traceability Matrix, never scored.
 - Never leave a required section blank; mark unknowns `[GAP]`. Tag later additions `[SUPPLEMENT]`.
 
