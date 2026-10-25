@@ -14,7 +14,7 @@ write one finding and use the Rule ID shown here.
 | GAP-10 | Each Data Preservation row has a test that compares the data item by item, and checks it again after reopening when the row says so. | `analysis.md` Data Preservation, the test steps | MAJOR |
 | GAP-11 | Where an edge case and a starting state meet (for example, a limit reached while a setting is on), at least one test covers that mix. | Edge Case Decisions, State Dependencies, Feature Interaction Analysis | MINOR |
 | GAP-12 | Each value in `Test Types:` has at least one step that really tests that type. For example, `Performance` needs a timed step, and `Boundary` needs a step at the limit. | `Test Types:` and the test steps | MAJOR |
-| GAP-13 | A test case claims at most 3 requirements and at most 3 test types. Exploratory-only tests have no cap. | `Requirement(s):` and `Test Types:` | MINOR |
+| GAP-13 | A test case claims at most 3 requirements. Its Test Types list is no longer than the cap for the story class: 4 for SIMPLE and MEDIUM, 3 for HIGH and COMPLEX, and 3 when there is no class. Exploratory-only tests have no cap. | `Requirement(s):`, `Test Types:` and the class in `analysis.md` | MINOR |
 | GAP-14 | Every requirement the Traceability Matrix lists for a test case is really checked by a step in that test case. | Traceability Matrix, the test steps | MAJOR |
 
 ## Severity guide

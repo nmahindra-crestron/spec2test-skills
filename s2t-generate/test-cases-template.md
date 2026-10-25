@@ -31,6 +31,16 @@ Total Test Cases Generated:
 | Exploratory | |
 | Interaction | |
 
+## Test Suite Sizing
+
+Leave out this section when the unit is not sized (see Step 1C).
+
+Complexity Class: <Raised Class when it is not None, else Complexity Class>
+Min: <min for the class>
+Target: <target from the formula>
+Max: <max for the class>
+Generated: <number of test cases, not counting deprecated ones>
+
 ## Generation Warnings
 
 None

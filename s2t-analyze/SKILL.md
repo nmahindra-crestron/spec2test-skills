@@ -424,6 +424,65 @@ existing features. Instead:
 
 Interaction coverage is **advisory** throughout: it never blocks the gate.
 
+## Step 3C — Story complexity assessment
+
+This step gives the story a score and a class. The class tells `s2t-generate` how many test cases
+to write. Skip this step for a format 1 unit (Step 1A found no `unitConstitutionVersion`).
+
+1. Count the rows in each table. Count only rows whose first cell is an ID. A missing table counts
+   as 0.
+   - Requirements: the `REQ-###` rows in `## Atomic Requirements`.
+   - Workflows: the `WF-###` rows in `## Workflow Analysis`.
+   - Business Rules: the `BR-###` rows in `## Business Rules`.
+   - Validation Rules: the `VR-###` rows in `## Validation Rules`.
+   - Interactions: the `INT-###` rows in `## Feature Interaction Analysis`.
+2. Count the platforms: the comma-separated items in the constitution's `Platforms:`. If there is
+   no constitution, use 1.
+3. Look up the points for each count:
+
+   | Points | Requirements | Workflows | Business Rules | Validation Rules | Interactions |
+   |---|---|---|---|---|---|
+   | 0 | 0 | 0 | – | – | 0 |
+   | 1 | 1–3 | 1 | 0–2 | 0–2 | – |
+   | 3 | 4–10 | 2–3 | 3–5 | 3–5 | 1–2 |
+   | 5 | 11–20 | 4–5 | 6–10 | 6–10 | 3–4 |
+   | 8 | 21+ | 6+ | 11+ | 11+ | 5+ |
+
+   | Platforms | Points |
+   |---|---|
+   | 1 | 0 |
+   | 2 | 1 |
+   | 3+ | 2 |
+
+4. Add the points to get the total score. Find the class:
+
+   | Total score | Class |
+   |---|---|
+   | 0–10 | SIMPLE |
+   | 11–20 | MEDIUM |
+   | 21–30 | HIGH |
+   | 31+ | COMPLEX |
+
+5. Fill the `## Story Complexity Assessment` section: one row per dimension (Count and Points), then
+   `Total Score:` and `Complexity Class:`. Keep the six rows in the template order.
+6. Check for a risk that needs more tests. The score counts size, not risk. Look for these risk
+   signs: data loss (for example, saved files can be deleted or overwritten), security, money, or
+   an area that often breaks (for example, a `Regression/Backward-Compatibility` interaction or a
+   High-risk row).
+   - If there is no risk sign, or the class is already COMPLEX, write `Risk Raise: None` and
+     `Raised Class: None`.
+   - Otherwise, ask one question in the Step 3 interview, for example: "This story can delete saved
+     files. Should it get more tests?" Ask one question only, even when there are several signs.
+   - Record the answer in `clarifications.md` (Step 3B) with `Target` = `general` and
+     `Resolution` = `Y` for Yes or `N` for No.
+   - For Yes, write `Risk Raise: <the risk> (CLR-###)`, using the ID of that row, and set
+     `Raised Class:` to the next class up (SIMPLE → MEDIUM, MEDIUM → HIGH, HIGH → COMPLEX).
+   - For No, write `Risk Raise: None` and `Raised Class: None`.
+   - Never raise more than one level. Never raise without the user's Yes.
+
+Gate 1 counts again. If a number does not match, Gate 1 fails and names the row to fix. Gate 1 also
+checks that a raise is one level up and that its `CLR-###` row says `Y`.
+
 ## Final self-review (required)
 
 Before you save, check your output against the Final Quality Check in the writing standard.
@@ -465,6 +524,9 @@ Interpret the returned status:
   id absent from `clarifications.md`, a missing conditional cell, or a `DEX-###` mentioned in
   `analysis.md` that does not exist in the intake. Fix the table or the referenced rows, re-write,
   and re-run Step 4.
+
+  A Story Complexity Assessment failure names the row or label to fix. Count again, fix the
+  section, and run Step 4 again.
 
 Keep your recorded Gate Result section consistent with the metrics you pass to `check_gate`.
 

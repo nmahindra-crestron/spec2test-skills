@@ -293,6 +293,9 @@ Call `check_constitution`. Look at `unitConstitutionVersion` in the result.
 - **`unitConstitutionVersion` is set**: this is a format 2 unit. If `exists` is false or `valid`
   is false, stop. Tell the user: "Run /s2t-init first." Otherwise go on to Step 1B.
 
+Look at `unitMarkers` in the same result. If `unitMarkers.suiteSizing` is set, this unit is sized.
+Run Step 1C before Step 2. Otherwise skip Step 1C and leave out the `## Test Suite Sizing` section.
+
 ## Step 1B — Agree on the Story Setup (format 2 only)
 
 If `test-cases.md` already has a `## Story Setup` section, show it to the user and ask:
@@ -317,6 +320,96 @@ To build the Story Setup:
      constitution. Write no Setup Steps in any test case, and start Test Steps at 1.
 
 After the user agrees, never change the Story Setup or any setup step without asking first.
+
+## Step 1C — Test Suite Sizing (sized units only)
+
+This step decides how many test cases to write and which test types share a test case. It runs
+only for a sized unit (Step 1A). It never removes coverage: every requirement still gets all 8
+test types. Only the grouping changes.
+
+1. Read `Raised Class:` in `analysis.md`. If it is None, read `Complexity Class:`. This is the
+   story class.
+2. Count these in `analysis.md`:
+   - W: the `WF-###` rows in Workflow Analysis.
+   - I: the `INT-###` rows in Feature Interaction Analysis.
+   - L: the workflows that have a stated numeric limit (a min, max or length).
+3. Work out the target from the formula for the class. Look up the min and max.
+4. Plan the test cases with the combining table. List each planned test case with its anchor type
+   and its Test Types.
+5. Check the plan before you write anything:
+   - Every requirement still gets all 8 types.
+   - In a SIMPLE or MEDIUM story, every test case has an anchor type in `Test Types:`: Functional,
+     Negative, Performance or Interaction.
+   - No test case lists more types than the cap for the class.
+6. Write the `## Test Suite Sizing` section: the class, the min, the target and the max. After you
+   write the test cases, fill `Generated:` with the number of test cases. Do not count deprecated
+   test cases.
+
+**Combining rule per class.** "Own case" means the type gets its own test case. "In Functional"
+means the type is listed in the Functional test case and tested by a step there.
+
+| Type | SIMPLE | MEDIUM | HIGH | COMPLEX |
+|---|---|---|---|---|
+| Functional | 1 per story | 1 per workflow | 1 per workflow | 1 per workflow |
+| Negative | 1 per story | 1 per workflow | 1 per workflow | 1 per workflow |
+| Performance | 1, with Stress | 1, with Stress | 1 | 1 |
+| Stress | in Performance | in Performance | own case | own case |
+| Boundary (valid side) | in Functional | in Functional | own case per limited workflow | own case per limited workflow |
+| Boundary (invalid side) | in Negative | in Negative | own case per limited workflow | own case per limited workflow |
+| Edge | in Functional | in Functional | in Functional | own case per workflow |
+| Exploratory | in Functional | in Functional | in Functional | own case |
+| Interaction | 1 per INT | 1 per INT | 1 per INT | 1 per INT |
+
+**Example: a SIMPLE story** with 1 INT row gets these 4 test cases:
+
+| Test case | Test Types | Primary Type |
+|---|---|---|
+| Functional | Functional, Edge, Boundary, Exploratory | none |
+| Negative | Negative, Boundary | Negative |
+| Performance | Performance, Stress | Performance |
+| Interaction | Interaction | Interaction |
+
+**Bands and caps.** The target is what you aim for. Gate 2 checks the min and max.
+
+| Class | Target formula | Min | Max | Test Types cap | Anchor rule |
+|---|---|---|---|---|---|
+| SIMPLE | 3 + I | 4 | 6 | 4 | Yes |
+| MEDIUM | 2W + 1 + I | 6 | 10 | 4 | Yes |
+| HIGH | 2W + L + 2 + I | 12 | 20 | 3 | No |
+| COMPLEX | 3W + L + 3 + I | 24 | 40 | 3 | No |
+
+In HIGH and COMPLEX stories, Edge, Boundary, Stress and Exploratory may stand alone in a test case.
+
+**Above the max.** When the plan has more test cases than the max, merge test cases:
+
+1. Merge only test cases that have the same anchor type, the same workflow preconditions and the
+   same `Primary Type:`.
+2. Merge in this order: Boundary test cases first, then Negative, then Functional.
+3. Never merge Interaction test cases. They still count toward the max.
+4. The merged test case keeps every requirement in `Requirement(s):` and every type in
+   `Test Types:` from the test cases it merged.
+5. The merged test case must have 6 to 18 test steps and stay within the Test Types cap. If it
+   would not, do not make that merge.
+6. Stop when the count is at or below the max, or when no merge is left.
+
+**Below the min.** Walk this expansion checklist. Add a test case only for a real gap. Never add a
+test case just to reach the min.
+
+| Item | Look for |
+|---|---|
+| Negative | A business rule or validation rule with no check of a wrong value or a broken rule. |
+| Edge | An Edge Case Decisions row with no test step. |
+| Interaction | An `INT-###` row with no test case. |
+| Recovery | A workflow that saves or changes data with no check of cancel, undo or reopen after a failure. |
+| Platform | Behavior the analysis says is different on one platform, with no test step on that platform. |
+| Inventory | A FULL Enumerated Value Inventory or Behavioral Coverage Inventory item with no test step. |
+
+**Record.** List every merge and every expansion in Generation Warnings. For a merge, name the test
+cases you merged and the test case they became. For an expansion, name the gap. These notes do not
+count toward `openGenerationWarnings`.
+
+If the count is still outside the band, go on. Gate 2 gives CONDITIONAL_PASS, and a person approves
+it with a reason.
 
 ## Step 2 — Design and write test-cases.md
 
@@ -359,8 +452,8 @@ Fix what you can. Name each rule you could not fix in Generation Warnings.
 
 ### Design discipline (both formats)
 
-- Prefer **workflow-oriented** test cases that combine related REQ/BR/VR; minimize count while
-  maximizing coverage. Do not generate one test case per requirement.
+- Prefer **workflow-oriented** test cases that combine related REQ/BR/VR. For a sized unit,
+  Step 1C sets the number of test cases. Do not generate one test case per requirement.
 - Every test case traces to at least one REQ/BR/VR/approved source; every referenced `REQ-xxx`
   exists in `analysis.md`. Requirements are never invented.
 - Carry forward the explicit analysis decisions from `analysis.md`: edge-case decisions, state
@@ -372,7 +465,8 @@ Fix what you can. Name each rule you could not fix in Generation Warnings.
   Negative, Edge, Boundary, Performance, Stress, Exploratory, Interaction. Generate at least one
   test case of each type per requirement (workflow-combined test cases may satisfy several
   requirements and several types at once, but every type must appear somewhere in the traced
-  coverage for every requirement).
+  coverage for every requirement). In a sized unit, a folded type still counts. List it in
+  `Test Types:` of the anchor test case, and make sure a step really tests it.
 - **Record each test case's types in the multi-value `Test Types:` field** (comma-separated) and its
   covered requirements in the `Requirement(s):` field. Gate 2 cross-references the `analysis.md`
   Coverage Intent Matrix against these fields: any requirement marked `Y` for a test type with no
@@ -524,9 +618,14 @@ Interpret the status:
 - **PASS** — full coverage, full traceability, no warnings, formatting valid. Hand off to
   `/s2t-quality`.
 - **CONDITIONAL_PASS** — coverage complete but generation warnings remain. Present them; advance only
-  after `approve_gate` (`stageId: "generate"`, `approved: true`), or resolve and re-run.
+  after `approve_gate` (`stageId: "generate"`, `approved: true`), or resolve and re-run. In a sized
+  unit, this also happens when the number of test cases is outside the band for the class. Explain
+  to the user why the count is outside the band. Then ask them to approve with a reason, or fix the
+  count and run the gate again.
 - **FAIL** — missing mandatory coverage, an untraced test case, a dangling requirement reference, or
-  a contract/`Name:`-formatting violation. Fix and re-run; approval cannot lift a FAIL.
+  a contract/`Name:`-formatting violation. In a sized unit, also: a test case with no anchor type in
+  a SIMPLE or MEDIUM story, or a test case whose Test Types list is over the cap for the class. Fix
+  and re-run; approval cannot lift a FAIL.
 
 **Feature-interaction carry-through (advisory)**: Gate 2 also runs an advisory `reference_chain` that
 checks every `INT-###` row in `analysis.md` is referenced by an `Interaction Ref` in `test-cases.md`

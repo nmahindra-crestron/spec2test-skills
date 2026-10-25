@@ -290,7 +290,7 @@ Use `$newSlug` as the canonical slug for all subsequent references (intake `Slug
 paths, etc.). In manual mode, skip this step — the engine slug is used as-is.
 
 The commands above change only `slug`. Keep every other field in `state.json` as it is, including
-`constitutionVersion`.
+`constitutionVersion` and `unitMarkers`.
 
 ## Step 2 — Draft intake.md
 

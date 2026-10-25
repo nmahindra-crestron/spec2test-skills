@@ -225,6 +225,27 @@ Copy, paste, save/reopen, import, and undo/redo behaviors must record the data b
 |--------|--------|-----------|-------------|---------|----------------------|
 | BHV-001 | | | | | |
 
+## Story Complexity Assessment
+
+Count the rows in each table, look up the points, and add them up. Gate 1 counts them again and
+fails if a number does not match. The Platforms count comes from the constitution's `Platforms:`.
+Risk Raise is None, or the risk and the clarification ID, such as `Deletes saved files (CLR-004)`.
+Raised Class is None, or the class one level up.
+
+| Dimension | Count | Points |
+|-----------|-------|--------|
+| Requirements | 0 | 0 |
+| Workflows | 0 | 0 |
+| Business Rules | 0 | 1 |
+| Validation Rules | 0 | 1 |
+| Interactions | 0 | 0 |
+| Platforms | 1 | 0 |
+
+Total Score: 2
+Complexity Class: SIMPLE
+Risk Raise: None
+Raised Class: None
+
 ## Risk Assessment
 
 ### High Risk
