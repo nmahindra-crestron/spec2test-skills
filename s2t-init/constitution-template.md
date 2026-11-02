@@ -31,6 +31,10 @@ Default Actions: <Setup Action IDs, comma separated, or None>
 | NAVIGATE | Navigate to <area> and open <view>. | <view> is displayed in <area>. | area, view |
 | PREPARE-DATA | Prepare <data> required for the test. | <data> is available and valid. | data |
 
+## Performance Baseline
+| ID | Action Kind | Target | Unit | Test Data | Notes |
+|---|---|---|---|---|---|
+
 ## Change Log
 | Version | Date | Change | Source |
 |---|---|---|---|

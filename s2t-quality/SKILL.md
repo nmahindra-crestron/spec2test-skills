@@ -276,7 +276,8 @@ The setup must support the test without changing something under test or leaving
 Each step must match the approved analysis and the story context. Do not invent values, states, limits, or workflow order that the analysis did not support.
 
 - Use the real requirement, business rule, validation rule, and edge-case decisions from analysis.md.
-- Do not guess a performance target, state transition, or interaction detail.
+- Do not guess a state transition or an interaction detail.
+- A performance target comes from the constitution's Performance Baseline or from the user. A target found in the story counts only after the user confirms it. Never make one up.
 - If the analysis is vague or missing, ask the user instead of inventing the logic.
 
 ## Review rule

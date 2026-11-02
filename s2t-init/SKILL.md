@@ -284,13 +284,39 @@ Start from `(Use the template in `constitution-template.md`, included alongside 
 - **Pre-requisite**: the user's baseline pre-requisite, or "None".
 - **Change Log**: leave the template row. The engine replaces it.
 
+Then go to Step 3E.
+
+### 3E — Performance Baseline
+
+The Performance Baseline lists the project's default speed targets. Later skills use it, so most
+stories need no extra speed question. Ask the user for each row, one question at a time, with
+`vscode_askQuestions`, and wait for each answer.
+
+1. Ask: "How fast must a simple UI action be, such as a click or a key press? Give a number and a
+   unit, for example 0.5 seconds." The answer is the PERF-001 row: Action Kind
+   `UI action (click, key press)`, Test Data `Any`, Notes `Default for every story`.
+2. Ask: "Is there another kind of action with its own speed target, such as opening a large file?
+   Answer No if there is none."
+3. For each answer that is not No, ask for what is still missing, one question at a time: the target
+   and its unit, then the test data name, such as `Large5k.cspm`. Add the row as PERF-002, PERF-003,
+   and so on. Then ask question 2 again.
+
+Rules for the rows:
+
+- Target is a number with no sign. It means "at most": `0.5` means the action takes 0.5 seconds or
+  less. Write `0.5`, not `< 0.5`.
+- Never write a row the user did not give. Never answer a question yourself.
+- PERF-001 is required. Without it, the engine does not save the constitution.
+
 Then go to Step 5.
 
 ## Step 4 — Re-run
 
 1. Show the current `.spec2test/constitution.md` in full.
-2. Ask what to change. Ask one short, plain question.
-3. Change only that part. Keep every other line the same.
+2. If it has no `## Performance Baseline` section, say so, and ask: "Do you want to add the
+   Performance Baseline now?" On Yes, run Step 3E, then go to Step 5.
+3. Ask what to change. Ask one short, plain question.
+4. Change only that part. Keep every other line the same.
 
 Then go to Step 5.
 
@@ -307,13 +333,16 @@ Show the full draft. Ask: **Confirm or Edit?**
 Before you save, check your output against the Final Quality Check in the writing standard.
 Fix what you can. Do not change text copied from user answers.
 
+Also check: Is PERF-001 in the Performance Baseline, and did every baseline row come from the
+user's answers?
+
 ## Step 6 — Save
 
 Call `save_constitution` with:
 
 - `content`: the full confirmed draft.
 - `change`: one short line, for example `Created by s2t-init` on a first run, or what changed on a
-  re-run, such as `Added macOS to Platforms`.
+  re-run, such as `Added macOS to Platforms` or `Added Performance Baseline`.
 - `source`: where the change came from, for example `User reply`.
 
 If the result is `saved`, tell the user the `version` and the `path`. On a first run, tell them to

@@ -84,6 +84,7 @@ Priority:
 Risk:
 Test Types: <comma-separated list of one or more of: Functional, Negative, Edge, Boundary, Performance, Stress, Exploratory, Interaction>
 Primary Type: <Negative | Interaction | Performance — omit for all other cases>
+Performance Target: <scored units only: the REQ ID of the Performance Targets row this case tests, such as REQ-001 — omit for all other cases>
 Interaction Type: <required ONLY when Test Types includes Interaction — exactly one of the twelve values from analysis.md; omit otherwise>
 Interaction Ref: <required ONLY when Test Types includes Interaction — the single INT-### row this expands (strict 1:1); omit otherwise>
 Existing Feature(s): <required ONLY when Test Types includes Interaction — the existing feature(s) targeted, carried from analysis.md; omit otherwise>

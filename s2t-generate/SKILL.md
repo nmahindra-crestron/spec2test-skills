@@ -265,7 +265,8 @@ The setup must support the test without changing something under test or leaving
 Each step must match the approved analysis and the story context. Do not invent values, states, limits, or workflow order that the analysis did not support.
 
 - Use the real requirement, business rule, validation rule, and edge-case decisions from analysis.md.
-- Do not guess a performance target, state transition, or interaction detail.
+- Do not guess a state transition or an interaction detail.
+- A performance target comes from the constitution's Performance Baseline or from the user. A target found in the story counts only after the user confirms it. Never make one up.
 - If the analysis is vague or missing, ask the user instead of inventing the logic.
 
 ## Review rule
@@ -295,6 +296,9 @@ Call `check_constitution`. Look at `unitConstitutionVersion` in the result.
 
 Look at `unitMarkers` in the same result. If `unitMarkers.suiteSizing` is set, this unit is sized.
 Run Step 1C before Step 2. Otherwise skip Step 1C and leave out the `## Test Suite Sizing` section.
+
+If `unitMarkers.scoringV2` is set, this is a scored unit. Follow the Performance case rules in
+Step 2.
 
 ## Step 1B — Agree on the Story Setup (format 2 only)
 
@@ -459,6 +463,18 @@ Fix what you can. Name each rule you could not fix in Generation Warnings.
 - Carry forward the explicit analysis decisions from `analysis.md`: edge-case decisions, state
   dependencies, comparison methods, performance targets, and data-preservation rows. Do not generate
   tests against unresolved or vague analysis records.
+- **Performance cases (scored units only)**:
+  - Write one Performance case per Performance Targets row.
+  - In `Requirement(s):`, list the row's REQ and every other REQ whose speed depends on that load
+    driver. Put each REQ with no load of its own in the case for the PERF-001 row, or the first row
+    when there is none. Every REQ marked Y for Performance must be in at least one Performance case.
+  - Add the line `Performance Target: REQ-###` at column 0, after `Primary Type:`. Use the REQ ID of
+    the row. Gate 2 counts Performance cases by this line, not by Primary Type.
+  - Use the row's test data name in at least one test step, unless Data Size is `Any`.
+  - The expected result uses the row's target number, or the legacy compare.
+  - In SIMPLE and MEDIUM, put Stress for a row in the same Performance case. In HIGH and COMPLEX,
+    Stress may have its own case only when the row's Stress Volume is not None. That case uses the
+    Stress Volume test data in a step, and has no `Performance Target:` line.
 - Cover Coverage Intent per the analysis matrix; satisfy Enumerated Value Inventory (FULL) and
   Behavioral Coverage Inventory; generate boundary coverage for validation limits.
 - **All eight test types are mandatory for every requirement — no skipping**: Functional,
@@ -509,7 +525,8 @@ Fix what you can. Name each rule you could not fix in Generation Warnings.
   (from `git config user.name`, fallback `user.email`, fallback `user`) · `Target`
   (`REQ-xxx / <TestType>`) · `Resolution` (`Y`/`N`/`SKIP`/`ANSWERED`) · verbatim `Question`/`Answer`
   (encode newlines `<br>`, pipes `\|`) · `Source`. If `clarifications.md` is absent, create it first
-  from `clarifications-template.md` (included alongside this skill).
+  from `clarifications-template.md` (included alongside this skill). Source starts with `user` for a
+  user answer, for example `user interview`. Source starts with `AI` for a row you wrote yourself.
 - **Never self-assign a coverage deferral.** You may only record a matrix cell as `SKIP` after the
   user explicitly authorizes deferring that requirement/test-type combination; record it back to the
   `analysis.md` Coverage Intent Matrix (via `s2t-analyze`) AND as a `Resolution: SKIP` row in
@@ -591,6 +608,10 @@ the test case, the step, and the LOGIC rule ID.
   as a logic violation.
 - If a lesson should become an engine check, suggest that the tester opens a spec for it. Do not
   open one yourself.
+- In a scored unit, check each Performance case: does the expected result use the row's target
+  number or legacy compare? Is every REQ marked Y for Performance in a Performance case? Does each
+  separate Stress case use its row's Stress Volume? If you cannot fix it, count it in
+  `logicViolations`.
 
 ## Step 3 — Run Gate 2
 
@@ -626,6 +647,15 @@ Interpret the status:
   a contract/`Name:`-formatting violation. In a sized unit, also: a test case with no anchor type in
   a SIMPLE or MEDIUM story, or a test case whose Test Types list is over the cap for the class. Fix
   and re-run; approval cannot lift a FAIL.
+
+**Performance cases (scored units).** Gate 2 checks the `Performance Target:` lines:
+
+- "there is no Performance test case" (FAIL): write one Performance case for each Performance
+  Targets row.
+- "N Performance test cases, but the limit is M" (CONDITIONAL_PASS): merge them into one case per
+  row, or ask the user to approve with a reason.
+- "Performance Targets has no REQ-### row" (FAIL): fix the ID in `Performance Target:`.
+- "no test step uses the test data" (FAIL): add a step that uses the row's test data name.
 
 **Feature-interaction carry-through (advisory)**: Gate 2 also runs an advisory `reference_chain` that
 checks every `INT-###` row in `analysis.md` is referenced by an `Interaction Ref` in `test-cases.md`

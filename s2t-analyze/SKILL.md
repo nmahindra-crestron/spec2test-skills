@@ -4,6 +4,7 @@ description: "Spec2Test pipeline stage 2 (analysis). Invoke on an approved intak
 allowed-tools:
   - spec2test_info
   - persist_artifact
+  - validate_output
   - check_gate
   - approve_gate
   - validate_memory
@@ -27,6 +28,7 @@ description: "Spec2Test pipeline stage 2 (analysis). Invoke on an approved intak
 allowed-tools:
   - spec2test_info
   - persist_artifact
+  - validate_output
   - check_gate
   - approve_gate
   - validate_memory
@@ -241,6 +243,9 @@ like any other question, and record the answer in `clarifications.md` (Step 3B) 
 `general`. Don't change the constitution yourself. If the user wants it changed, tell them to run
 `/s2t-init`.
 
+Also look at `unitMarkers` in the `check_constitution` result. If `unitMarkers.scoringV2` is set,
+this is a scored unit. Step 2B applies to it.
+
 ## Step 1B — Read adopted lessons
 
 If `.spec2test/lessons.md` exists, read its `Lesson Log` table and collect every row with
@@ -273,6 +278,10 @@ Core discipline (authoritative):
   unresolved edge, state, comparison, performance, or data-preservation gap.
 - Hidden Test Opportunities are **advisory only** — never in the Traceability Matrix, never scored.
 - Never leave a required section blank; mark unknowns `[GAP]`. Tag later additions `[SUPPLEMENT]`.
+
+Call `validate_output` (`skillId: "s2t-analyze"`) on the analysis. Fix every violation before you
+save. The engine picks the right contract for this unit. Do this before every save of `analysis.md`,
+here and in Step 3.
 
 Write it with `persist_artifact` — `stageId: "analysis"`, `content: <the filled markdown>`. When you
 rewrite `analysis.md` on later turns, pass **`force: true`** so the engine accepts the update instead
@@ -309,6 +318,38 @@ fails otherwise. For each row choose a disposition:
 - **Conflicts**: DEX rows that contradict each other or the AC go to Conflict Analysis and are
   resolved in the Step 3 interview.
 - Only mention `DEX-###` ids that exist in the intake; Gate 1 fails on unknown ids.
+
+## Step 2B — Performance targets (scored units only)
+
+Skip this step unless Step 1A found `unitMarkers.scoringV2`. Fill `## Performance Targets` with
+these rules:
+
+- Write one row per load driver: one user action at one data size. Merge two rows with the same
+  action and data size.
+- Write at least one row. With no load in the story, use PERF-001 for the main user action.
+- Data Size starts with a short test data name in backticks, such as `Large5k.cspm`, or is `Any`.
+- Target is a number with no sign, and means "at most". Write `500`, not `< 500`. Or write
+  "Same as or faster than <legacy product>". "No visible lag" alone is not a target.
+- Each row's REQ must be in Atomic Requirements.
+- Fill Stress Volume only when the row has its own stress load, with its test data name in
+  backticks. Otherwise write None, or leave the column out.
+
+Find each target in this order:
+
+1. A Performance Baseline row that fits the action and the data size. Write its ID in Baseline and
+   `None` in CLR.
+2. A target stated in the story, a comment or a design source. Show it and where you found it, and
+   ask one Yes/No question, for example: "The story says the list must open in 2 seconds. Use this
+   target?" On Yes, record the answer (Step 3B) and write its CLR ID. On No, go to 3.
+3. Ask the user one question and wait, for example: "How fast must the list open in a 1,000-line
+   module?" Show the closest baseline row as a suggestion. Record the answer and write its CLR ID.
+
+Never answer these questions yourself, even when told to run on your own. Ask each one with
+`vscode_askQuestions` and wait.
+
+If the constitution has no `## Performance Baseline`, skip step 1. Tell the user once per run:
+"Your constitution has no Performance Baseline. Run /s2t-init to add one, so most targets need no
+question."
 
 ## Step 3 — Resolution interview loop
 
@@ -381,6 +422,9 @@ artifact `clarifications.md` — never embedded as raw human prose in `analysis.
   backing `SKIP` row here or the gate fails (`cross_reference_backed`).
 - In `analysis.md`, cite the clarification (e.g. Evidence Register source = `clarification CLR-003`)
   rather than restating the user's words.
+- **Source rule**: Source starts with `user` for a user answer, for example `user interview`.
+  Source starts with `AI` for a row you wrote yourself. Gate 1 does not accept an AI row as the
+  source of a performance target.
 - **Design extract answers**: record a `CLR-###` row for each disposition answer (`Target` =
   `DEX-###`) and cite that id in the Accounting row's **CLR** column.
 - Re-write `clarifications.md` with `persist_artifact` (`artifact: "clarifications.md"`,
@@ -489,6 +533,12 @@ Before you save, check your output against the Final Quality Check in the writin
 Fix what you can. Do not change text copied from Jira, Confluence, or user answers.
 Count the rule breaks you could not fix.
 
+In a scored unit, also check:
+
+- Does every Performance Targets row have a Baseline ID or a CLR with a user answer?
+- Do any two Performance Targets rows have the same action and the same data size? Merge them into
+  one row.
+
 Save the final `analysis.md` with `persist_artifact` (`force: true`), then run Step 4.
 
 ## Step 4 — Run Gate 1
@@ -527,6 +577,17 @@ Interpret the returned status:
 
   A Story Complexity Assessment failure names the row or label to fix. Count again, fix the
   section, and run Step 4 again.
+
+  In a scored unit, a Performance Targets failure names the row to fix:
+
+  - **No source**: the row has no Baseline ID and no CLR. Pick a Performance Baseline row, or ask
+    the user for the target (Step 2B).
+  - **Missing baseline row**: the Baseline ID is not in the constitution. Pick a row that exists, or
+    tell the user to run `/s2t-init` to add it.
+  - **AI answer**: the CLR row's Source does not start with `user`. Ask the user the question, record
+    the answer, and use its CLR ID.
+  - **REQ not in Atomic Requirements**: add the REQ to Atomic Requirements, or fix the ID in
+    Performance Targets.
 
 Keep your recorded Gate Result section consistent with the metrics you pass to `check_gate`.
 

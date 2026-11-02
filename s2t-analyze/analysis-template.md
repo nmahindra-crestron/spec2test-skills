@@ -213,9 +213,13 @@ When a requirement says the behavior must match the old product or previous beha
 
 Performance and stress requirements must be numeric, measurable, and include an explicit unit and environment when relevant.
 
-| REQ | Measure | Target | Unit | Data Size | Machine | CLR |
-|-----|---------|--------|------|-----------|---------|-----|
-| REQ-001 | | | | | | |
+Each row is one load driver: one user action at one data size. Write at least one row. Each row needs
+a Baseline ID, or a CLR with the user's answer. Target is a number with no sign, and means "at most".
+Add the Stress Volume column only when a row has its own stress load.
+
+| REQ | Measure | Target | Unit | Data Size | Machine | CLR | Baseline | Stress Volume |
+|-----|---------|--------|------|-----------|---------|-----|----------|---------------|
+| REQ-001 | | | | `Any` | | None | PERF-001 | None |
 
 ## Data Preservation
 
