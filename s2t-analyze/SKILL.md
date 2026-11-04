@@ -9,6 +9,8 @@ allowed-tools:
   - approve_gate
   - validate_memory
   - check_constitution
+  - find_partner_coverage
+  - jira_get_issue
 ---
 
 You are executing the **s2t-analyze** skill. Perform these steps yourself using the Spec2Test
@@ -33,6 +35,8 @@ allowed-tools:
   - approve_gate
   - validate_memory
   - check_constitution
+  - find_partner_coverage
+  - jira_get_issue
 ---
 
 You are executing the **s2t-analyze** skill. Perform these steps yourself using the Spec2Test
@@ -244,7 +248,8 @@ like any other question, and record the answer in `clarifications.md` (Step 3B) 
 `/s2t-init`.
 
 Also look at `unitMarkers` in the `check_constitution` result. If `unitMarkers.scoringV2` is set,
-this is a scored unit. Step 2B applies to it.
+this is a scored unit. The scored-unit rules in Step 2, Step 2B, Step 3A, Step 3A-owners and Step 3C
+apply to it.
 
 ## Step 1B — Read adopted lessons
 
@@ -272,6 +277,23 @@ Core discipline (authoritative):
 - Populate the mandatory inventories (Enumerated Value Inventory `INV`, Behavioral Coverage
   Inventory `BHV`) and Coverage Hardening Signals; missing evidence creates a Requirement Gap and a
   Clarification Question, not a Requirement.
+- **Data lists**: Values that are handled the same way go in one Enumerated Value Inventory row and
+  one REQ. Do not write one REQ per value. For example, 31 snippets or 15 token colors are one
+  inventory row and one REQ each.
+- **Business Rules**: Write one Business Rules row per rule. Do not split one rule into several
+  rows. Do not copy a rule in just because it appears in another table.
+- **Workflow Kind (scored units)**: In a scored unit (Step 1A), fill the Kind column of
+  `## Workflow Analysis` for every workflow:
+  - Kind is `User` when its steps differ from every other workflow.
+  - Kind is `Variant of WF-###` when it has the same steps as the User workflow WF-###, with
+    different data or a different trigger. A variant always points to a User workflow, never to
+    another variant.
+  - Kind is `Non-functional` when it checks speed, platform or layout.
+
+  Examples: in a code snippet story, WF-002 to WF-004 are variants of WF-001, because each one
+  inserts a different snippet with the same steps. In a keyboard navigation story, WF-009 is
+  Non-functional, because it only checks speed, stress and macOS. In a unit that is not scored,
+  you may leave the Kind column out.
 - **Required analysis pattern sections**: every analysis must include `## Edge Case Decisions`,
   `## State Dependencies`, `## Comparison Method`, `## Performance Targets`, and `## Data
   Preservation`. These sections are part of the source-of-truth design record and Gate 1 blocks any
@@ -443,6 +465,13 @@ feature drawn from the project memory tree (`docs/s2t-memory/`).
   (e.g. `auth-tokens (source: PROJ-123)`). Fill every column, including the scenario-outline columns
   (Objective, Pre-conditions, Interaction Steps, Expected Result) at a high level — do NOT author full
   test cases here (the generate stage expands each `INT-###` into exactly one interaction test case).
+  In a scored unit, the generate stage writes one test case for each row this story owns.
+- **Partner Story (scored units)**: In a scored unit (Step 1A), fill Partner Story from the row's
+  Memory Source: the Jira key of the other story, or `None` when the Memory Source names no Jira
+  key. Write one row per partner behavior, not one row per key. Keys that describe the same
+  behavior (for example, the story that built it and a later bug fix) share one row. For now, use
+  the key of the most recent story that changed the behavior, and keep every key in the Memory
+  Source. Step 3A-owners may change the key and sets the Owner. Until then, write `This story`.
 - Also note any existing behavior the change could regress; record these as
   `Regression/Backward-Compatibility` interactions (advisory risks) so downstream generation preserves
   compatibility.
@@ -468,10 +497,123 @@ existing features. Instead:
 
 Interaction coverage is **advisory** throughout: it never blocks the gate.
 
+## Step 3A-owners — Interaction owners (scored units only)
+
+Skip this step unless Step 1A found `unitMarkers.scoringV2`. A test between two stories is written
+once. This step decides which story writes it, from what the shared repo already tests. Run it
+right after Step 3A.
+
+1. Run `git fetch origin` in the terminal. Stop it if it takes more than 60 seconds. If it fails
+   or times out, go to step 7.
+2. Call `find_partner_coverage` once:
+   - `storyKey`: this story's Jira key.
+   - `partnerKeys`: every Jira key cited in the Memory Source of every row that has a partner.
+     Use every key, not only the Partner Story, so a case filed under an older story is found.
+   - `featureTerms`: this story's feature names: the intake title and the Feature Area values.
+3. Read the result. Count a partner case only when `deprecated` is false and `gate2Passed` is
+   true. A case with `matchedBy: "feature"` does not name this story. Read it, and count it only
+   when it tests the same pair. When unsure, do not count it. When a row cites several keys and
+   one of them has a counted case, set Partner Story to that key.
+4. Find the release of this story and each partner: call `jira_get_issue` with
+   `fields: "fixVersions"`. If the tool is missing, a call fails, or either story has no fix
+   version, ask the user one question that lists every unclear partner, for example: "Which
+   release is each story in: CONSIM-6830, CONSIM-6032? (earlier, this or later)". Wait for the
+   answer. Never answer it yourself, even when told to run on your own. Record the answer in
+   `clarifications.md` (Step 3B) with `Target` = `general` and `Source` = `user interview`.
+5. Set the Owner of each row with this table. The story analysed second owns the test.
+
+   | Partner found | Owner |
+   |---|---|
+   | Delivered in an earlier release | This story |
+   | Same release, its unit already has a case for this pair | Covered by <KEY> TC-### |
+   | Same release, no case for this pair yet | This story |
+   | Not delivered yet (a later release) | Deferred to <KEY> |
+   | This story changes the partner's behavior | This story, always |
+
+   A row with Partner Story `None` always has Owner `This story`. "A case for this pair" means a
+   partner case you counted in step 3.
+6. Under the table, write `Partner lookup: remote checked <YYYY-MM-DD>, <n> units read.` Use the
+   date of `lastFetchAt` and the `unitsRead` number.
+7. If the fetch failed, or `remoteChecked` is false, set every Owner to `This story` and write
+   `Partner lookup: remote not reached` under the table. Keeping the test is the safe choice.
+8. In the Coverage Intent Matrix, for each requirement whose `INT-###` rows all have Owner
+   `Covered by` or `Deferred to`, write `REF INT-###` in its Interaction cell, naming one of those
+   rows. When a row this story owns covers the same requirement, keep `Y`.
+
+When `s2t-analyze` runs again (for example in a rework), run this step again and update the
+matrix cells to match the new owners.
+
 ## Step 3C — Story complexity assessment
 
-This step gives the story a score and a class. The class tells `s2t-generate` how many test cases
-to write. Skip this step for a format 1 unit (Step 1A found no `unitConstitutionVersion`).
+This step gives a scored unit (Step 1A found `unitMarkers.scoringV2`) its class. The class tells
+`s2t-generate` how many test cases to write. For a unit with a constitution version but no
+`scoringV2`, use Step 3C-legacy instead. Skip both for a format 1 unit.
+
+The class comes from two counts. Requirements, Validation Rules, Edge Case Decisions, State
+Dependencies and Platforms do not change the class. They are still tested.
+
+1. Count. Count only rows whose first cell is an ID. A missing table counts as 0.
+   - Logic: the `BR-###` rows in `## Business Rules`.
+   - Breadth: the `WF-###` rows in `## Workflow Analysis` with Kind `User`.
+   - Also count the `Variant of WF-###` rows and the `Non-functional` rows. You need them for the
+     class question.
+2. Look up the level for each count:
+
+   | Logic level | Business rules |
+   |---|---|
+   | Low | 0–3 |
+   | Medium | 4–8 |
+   | High | 9+ |
+
+   | Breadth level | User workflows |
+   |---|---|
+   | Narrow | 0–2 |
+   | Moderate | 3–6 |
+   | Wide | 7+ |
+
+3. Find the class:
+
+   | Logic \ Breadth | Narrow | Moderate | Wide |
+   |---|---|---|---|
+   | Low | SIMPLE | SIMPLE | MEDIUM |
+   | Medium | MEDIUM | MEDIUM | HIGH |
+   | High | MEDIUM | HIGH | COMPLEX |
+
+4. Count the High-Risk Interactions: the `INT-###` rows in `## Feature Interaction Analysis` with
+   Risk `High`. This count does not change the class.
+5. Fill the `## Story Complexity Assessment` section: the Logic row and the Breadth row (Count and
+   Level), then `Complexity Class:` and `High-Risk Interactions:`.
+6. Confirm the class with the user. Do this for every scored story, before the risk question.
+   - If `Class Confirmed:` already names a CLR row whose Answer has the same class, keep it. When
+     `s2t-analyze` runs again (for example in a rework), ask again only if the class changed.
+   - Otherwise ask one question with `vscode_askQuestions` and wait:
+     "This story looks <CLASS>: <n> business rules, <n> user workflows (<n> variants, <n>
+     non-functional). Does that sound right?" Options: Yes, No. Do not show the workflow list with
+     this question.
+   - On Yes, record the answer in `clarifications.md` (Step 3B) with `Stage` = `analysis`,
+     `Target` = `class`, `Resolution` = `Y`, Answer `Y (<CLASS>)` and a Source that starts with
+     `user`.
+   - On No, show the workflow list (ID, name, Kind) and ask one follow-up: "What looks wrong: a
+     workflow's kind, or the business rules?" Fix what the user names, count again, and ask the
+     class question again.
+   - If the user still says No, keep the class from the grid. Record `Resolution` = `N` and the
+     Answer `N (<CLASS>): <the user's reason>`. Do not ask the user for a class. A risk raise is
+     the only way up. No approval is needed.
+   - Write `Class Confirmed: CLR-###` with the ID of that row, under the other labels.
+   - Never answer this question yourself. Ask and wait, even when told to run on your own.
+7. Check for a risk that needs more tests. Use the same risk signs and the same one question as
+   Step 3C-legacy step 6. High-Risk Interactions of 1 or more is also a risk sign. Write
+   `Risk Raise:` and `Raised Class:` the same way.
+
+Gate 1 counts again. If a count, a level or the class does not match, Gate 1 fails and names it.
+Gate 1 also fails when the `Class Confirmed:` row is missing, did not come from the user, or was
+given for another class.
+
+## Step 3C-legacy — Story complexity assessment (units without scoringV2)
+
+Use this step only when Step 1A found a constitution version and no `unitMarkers.scoringV2`. It
+gives the story a score and a class. Skip this step for a format 1 unit (Step 1A found no
+`unitConstitutionVersion`).
 
 1. Count the rows in each table. Count only rows whose first cell is an ID. A missing table counts
    as 0.
@@ -507,8 +649,24 @@ to write. Skip this step for a format 1 unit (Step 1A found no `unitConstitution
    | 21–30 | HIGH |
    | 31+ | COMPLEX |
 
-5. Fill the `## Story Complexity Assessment` section: one row per dimension (Count and Points), then
-   `Total Score:` and `Complexity Class:`. Keep the six rows in the template order.
+5. Fill the `## Story Complexity Assessment` section with this table and these lines. The template
+   shows the scored-unit layout, so use this one instead. Keep the six rows in this order:
+
+   ```markdown
+   | Dimension | Count | Points |
+   |-----------|-------|--------|
+   | Requirements | 0 | 0 |
+   | Workflows | 0 | 0 |
+   | Business Rules | 0 | 1 |
+   | Validation Rules | 0 | 1 |
+   | Interactions | 0 | 0 |
+   | Platforms | 1 | 0 |
+
+   Total Score: 2
+   Complexity Class: SIMPLE
+   Risk Raise: None
+   Raised Class: None
+   ```
 6. Check for a risk that needs more tests. The score counts size, not risk. Look for these risk
    signs: data loss (for example, saved files can be deleted or overwritten), security, money, or
    an area that often breaks (for example, a `Regression/Backward-Compatibility` interaction or a
@@ -538,6 +696,15 @@ In a scored unit, also check:
 - Does every Performance Targets row have a Baseline ID or a CLR with a user answer?
 - Do any two Performance Targets rows have the same action and the same data size? Merge them into
   one row.
+- Do any two User workflows follow the same steps? Make one a `Variant of` the other.
+- Is each business rule one row, not split and not copied from another table? Merge split rows and
+  remove copies.
+- Do two `INT-###` rows have the same Existing Feature, the same requirement and the same
+  Interaction Type? Merge them into one row, and keep every Jira key in its Memory Source.
+- Does every `Covered by` row name a case that `find_partner_coverage` returned?
+- Does every `REF INT-###` cell point to a row this story does not own?
+
+Count each problem you cannot fix in `openAdvisoryItems` (Step 4).
 
 Save the final `analysis.md` with `persist_artifact` (`force: true`), then run Step 4.
 
@@ -589,6 +756,40 @@ Interpret the returned status:
   - **REQ not in Atomic Requirements**: add the REQ to Atomic Requirements, or fix the ID in
     Performance Targets.
 
+  In a scored unit, a Workflow Analysis or Story Complexity Assessment failure names the row to fix:
+
+  - **Kind value**: Kind is not `User`, `Non-functional` or `Variant of WF-###`. Use one of these.
+  - **Variant link**: a variant points to a workflow that is missing, or that is not a User
+    workflow. Point it to the User workflow whose steps it repeats, or set its Kind to `User`.
+  - **Count, level or class**: count the rows again (Step 3C), look up the level and the class, and
+    fix the row or the `Complexity Class:` line. If you changed the class, ask the class question
+    again.
+  - **High-Risk Interactions**: count the `INT-###` rows with Risk `High` and fix the line.
+  - **Class confirmation**: the `Class Confirmed:` line is missing, its CLR row is missing, the row's
+    Target is not `class`, its Resolution is not Y or N, or its Source does not start with `user`.
+    Ask the user the class question (Step 3C step 6), record the answer, and write its ID.
+  - **Class changed**: the class in the CLR Answer is not the current class. Ask the user to
+    confirm the new class, record a new row, and update `Class Confirmed:`.
+  - **Partner Story or Owner value**: Partner Story must be a Jira key or `None`. Owner must be
+    `This story`, `Covered by <KEY> TC-###` or `Deferred to <KEY>`. A row with Partner Story
+    `None` must have Owner `This story`. Fix the row (Step 3A-owners).
+  - **REF cell owned by this story** ("INT-### is owned by this story. Write its test case."): the
+    Interaction cell says `REF INT-###`, but that row has Owner `This story`. Change the cell to
+    `Y`. The generate stage then writes the case.
+  - **REF cell with no row**: the Interaction cell names an `INT-###` row that does not exist. Fix
+    the ID, or write `Y`.
+
+  These give CONDITIONAL_PASS. Fix them, or ask the user to approve with a reason:
+
+  - **Non-functional workflow with a functional REQ**: move the REQ to a User workflow, or set the
+    row's Kind to `User`.
+  - **User workflow with only speed or platform REQs**: set its Kind to `Non-functional`, or add the
+    user steps it covers.
+  - **Variant in another Feature Area**: check that the variant really repeats the steps of its
+    parent. If it does not, set its Kind to `User`.
+  - **Near-repeat business rules**: keep one row per rule. Merge the two rows, or reword one so the
+    difference is clear.
+
 Keep your recorded Gate Result section consistent with the metrics you pass to `check_gate`.
 
 ## Rules
@@ -596,5 +797,7 @@ Keep your recorded Gate Result section consistent with the metrics you pass to `
 - Operate only on the active unit; use `force: true` to update the `analysis.md` you are building.
 - Requirements only from documented evidence; assumptions never become requirements.
 - Do not advance to `s2t-generate` until Gate 1 is PASS, or CONDITIONAL_PASS with a recorded approval.
-- No network access; use Jira relationships only if already present in `intake.md`.
+- No network access, except in Step 3A-owners: `git fetch origin` in the terminal and
+  `jira_get_issue` for fix versions. Otherwise use Jira relationships only if already present in
+  `intake.md`.
 

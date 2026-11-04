@@ -51,9 +51,13 @@ Source sections found (✅ / [GAP]); total GAP references carried from intake.
 
 ## Workflow Analysis
 
-| Workflow ID | Workflow Name | Feature Area | Requirements |
-|-------------|---------------|--------------|--------------|
-| WF-001 | | | REQ-001 |
+Kind is User (its steps differ from every other workflow), Variant of WF-### (the same steps as a
+User workflow, with different data or a different trigger) or Non-functional (a speed, platform or
+layout check).
+
+| Workflow ID | Workflow Name | Feature Area | Requirements | Kind |
+|-------------|---------------|--------------|--------------|------|
+| WF-001 | | | REQ-001 | User |
 
 ## Design Extract Accounting
 
@@ -175,15 +179,27 @@ interactions found). Missing/unbacked interactions never FAIL the gate — at mo
 `auth-tokens (source: PROJ-123)`). When project memory is absent and the user names the existing
 feature during the interview, cite the backing clarification instead (e.g. `clarification CLR-003`).
 
+**Partner Story** and **Owner** (scored units only; leave both columns out for other units):
+
+- Partner Story is the Jira key of the other story in the interaction, taken from the Memory
+  Source, such as `ABC-123`. Write `None` when the Memory Source names no Jira key.
+- Owner says which story writes the test case. Use one of these 3 forms:
+  - `This story`: this story writes the test case.
+  - `Covered by <KEY> TC-###`: the partner story already has the test case.
+  - `Deferred to <KEY>`: the partner story ships later, so it writes the test case.
+- A row with Partner Story `None` always has Owner `This story`.
+- Write one line under the table: `Partner lookup: remote checked <date>, <n> units read.` or
+  `Partner lookup: remote not reached`.
+
 <!-- No-memory fallback: if docs/s2t-memory/ is absent/empty, add an advisory note here (e.g.
 "No project memory found — run s2t-hydrate to enable memory-backed feature-interaction analysis;
 interactions below are user-sourced only."), raise ONE mandatory clarification (run s2t-hydrate vs.
 manually name existing features), never fabricate features, and cite `clarification CLR-###` in
 Memory Source for any user-named interaction. A zero-row table is valid — coverage is advisory. -->
 
-| Interaction ID | Existing Feature | Memory Source | New Feature / REQ | Interaction Type | Risk | Impact | Objective | Pre-conditions | Interaction Steps | Expected Result |
-|----------------|------------------|---------------|-------------------|------------------|------|--------|-----------|----------------|-------------------|-----------------|
-| INT-001 | | | | Direct | Medium | | | | | |
+| Interaction ID | Existing Feature | Memory Source | New Feature / REQ | Interaction Type | Risk | Impact | Objective | Pre-conditions | Interaction Steps | Expected Result | Partner Story | Owner |
+|----------------|------------------|---------------|-------------------|------------------|------|--------|-----------|----------------|-------------------|-----------------|---------------|-------|
+| INT-001 | | | | Direct | Medium | | | | | | None | This story |
 
 ## Edge Case Decisions
 
@@ -231,24 +247,23 @@ Copy, paste, save/reopen, import, and undo/redo behaviors must record the data b
 
 ## Story Complexity Assessment
 
-Count the rows in each table, look up the points, and add them up. Gate 1 counts them again and
-fails if a number does not match. The Platforms count comes from the constitution's `Platforms:`.
-Risk Raise is None, or the risk and the clarification ID, such as `Deletes saved files (CLR-004)`.
-Raised Class is None, or the class one level up.
+Logic counts the BR-### rows in Business Rules. Breadth counts the WF-### rows in Workflow Analysis
+with Kind User. Look up each level, then the class. Gate 1 counts again and fails if a number does
+not match. High-Risk Interactions counts the INT-### rows with Risk High. It does not change the
+class. Risk Raise is None, or the risk and the clarification ID, such as
+`Deletes saved files (CLR-004)`. Raised Class is None, or the class one level up. Class Confirmed is
+the CLR-### row with the user's answer to the class question.
 
-| Dimension | Count | Points |
-|-----------|-------|--------|
-| Requirements | 0 | 0 |
-| Workflows | 0 | 0 |
-| Business Rules | 0 | 1 |
-| Validation Rules | 0 | 1 |
-| Interactions | 0 | 0 |
-| Platforms | 1 | 0 |
+| Axis | Count | Level |
+|------|-------|-------|
+| Logic | 0 | Low |
+| Breadth | 1 | Narrow |
 
-Total Score: 2
 Complexity Class: SIMPLE
+High-Risk Interactions: 0
 Risk Raise: None
 Raised Class: None
+Class Confirmed: CLR-001
 
 ## Risk Assessment
 
@@ -283,6 +298,10 @@ applies to a requirement (e.g. no documented performance target, no defined stre
 guess or silently mark it thin — **ask the user** (see Step 3 of the skill) until the coverage
 approach is clear, then record it in the corresponding Non Functional Consideration or Coverage
 Hardening Signal. Never mark a column `N` to skip generating that test type.
+
+In a scored unit, an Interaction cell may hold `REF INT-###` instead of `Y`. Use it only when every
+`INT-###` row for that requirement has Owner `Covered by` or `Deferred to`. The reference shows
+which story owns the test.
 
 | Requirement | Functional | Negative | Edge | Boundary | Performance | Stress | Exploratory | Interaction |
 |-------------|------------|----------|------|----------|-------------|--------|-------------|-------------|

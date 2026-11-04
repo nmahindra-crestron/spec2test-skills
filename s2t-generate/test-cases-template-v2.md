@@ -37,7 +37,7 @@ Leave out this section when the unit is not sized (see Step 1C).
 
 Complexity Class: <Raised Class when it is not None, else Complexity Class>
 Min: <min for the class>
-Target: <target from the formula>
+Target: <target from the formula; in a scored unit, moved into the band>
 Max: <max for the class>
 Generated: <number of test cases, not counting deprecated ones>
 
@@ -86,8 +86,9 @@ Test Types: <comma-separated list of one or more of: Functional, Negative, Edge,
 Primary Type: <Negative | Interaction | Performance — omit for all other cases>
 Performance Target: <scored units only: the REQ ID of the Performance Targets row this case tests, such as REQ-001 — omit for all other cases>
 Interaction Type: <required ONLY when Test Types includes Interaction — exactly one of the twelve values from analysis.md; omit otherwise>
-Interaction Ref: <required ONLY when Test Types includes Interaction — the single INT-### row this expands (strict 1:1); omit otherwise>
+Interaction Ref: <required ONLY when Test Types includes Interaction — the INT-### row this case covers. Scored units: one case for each INT row this story owns. Other units: one case per INT row (strict 1:1); omit otherwise>
 Existing Feature(s): <required ONLY when Test Types includes Interaction — the existing feature(s) targeted, carried from analysis.md; omit otherwise>
+Partner Steps: <scored units, interaction cases only: the test step numbers that use the partner feature, such as 7, 9 — omit otherwise>
 Tags:
 Purpose: Verify <one sentence, unique in this story>
 - <optional scope bullet>

@@ -297,8 +297,8 @@ Call `check_constitution`. Look at `unitConstitutionVersion` in the result.
 Look at `unitMarkers` in the same result. If `unitMarkers.suiteSizing` is set, this unit is sized.
 Run Step 1C before Step 2. Otherwise skip Step 1C and leave out the `## Test Suite Sizing` section.
 
-If `unitMarkers.scoringV2` is set, this is a scored unit. Follow the Performance case rules in
-Step 2.
+If `unitMarkers.scoringV2` is set, this is a scored unit. Follow the Performance case rules and the
+interaction case rules for scored units in Step 2.
 
 ## Step 1B — Agree on the Story Setup (format 2 only)
 
@@ -334,10 +334,14 @@ test types. Only the grouping changes.
 1. Read `Raised Class:` in `analysis.md`. If it is None, read `Complexity Class:`. This is the
    story class.
 2. Count these in `analysis.md`:
-   - W: the `WF-###` rows in Workflow Analysis.
-   - I: the `INT-###` rows in Feature Interaction Analysis.
+   - W: the `WF-###` rows in Workflow Analysis. In a scored unit, W is only the rows with Kind
+     `User`. Variant and Non-functional rows do not count.
+   - I: the `INT-###` rows in Feature Interaction Analysis. In a scored unit, I is only the rows
+     with Owner `This story`. Rows with `Covered by` or `Deferred to` get no test case here.
    - L: the workflows that have a stated numeric limit (a min, max or length).
-3. Work out the target from the formula for the class. Look up the min and max.
+3. Work out the target from the formula for the class. Look up the min and max. In a scored unit,
+   use the scored bands table. If the target is below the min, use the min. If it is above the
+   max, use the max.
 4. Plan the test cases with the combining table. List each planned test case with its anchor type
    and its Test Types.
 5. Check the plan before you write anything:
@@ -364,6 +368,23 @@ means the type is listed in the Functional test case and tested by a step there.
 | Exploratory | in Functional | in Functional | in Functional | own case |
 | Interaction | 1 per INT | 1 per INT | 1 per INT | 1 per INT |
 
+In a scored unit, read the Interaction row as 1 per owned INT: one test case for each `INT-###`
+row with Owner `This story`.
+
+**Scored units.** In a scored unit:
+
+- Read "1 per workflow" as 1 per User workflow.
+- A Variant workflow gets no test case of its own. Put its requirements in the test cases of the
+  workflow it is a variant of. Give each variant value its own step or its own test data row.
+- A FULL Enumerated Value Inventory row gets one test case, with one test data row per value.
+  Never write one test case per value.
+- A Non-functional workflow gets no Functional and Negative pair. Put a speed or load requirement
+  in the Performance case. Put a platform or layout requirement in a step of the matching
+  Functional case.
+- A test case still has 6 to 18 test steps. When the data does not fit, split the test case by
+  data, for example snippets A to M and N to Z. Never split it by test type.
+- Every requirement still gets all 8 test types.
+
 **Example: a SIMPLE story** with 1 INT row gets these 4 test cases:
 
 | Test case | Test Types | Primary Type |
@@ -373,7 +394,8 @@ means the type is listed in the Functional test case and tested by a step there.
 | Performance | Performance, Stress | Performance |
 | Interaction | Interaction | Interaction |
 
-**Bands and caps.** The target is what you aim for. Gate 2 checks the min and max.
+**Bands and caps (sized units without scoringV2).** The target is what you aim for. Gate 2 checks
+the min and max.
 
 | Class | Target formula | Min | Max | Test Types cap | Anchor rule |
 |---|---|---|---|---|---|
@@ -381,6 +403,16 @@ means the type is listed in the Functional test case and tested by a step there.
 | MEDIUM | 2W + 1 + I | 6 | 10 | 4 | Yes |
 | HIGH | 2W + L + 2 + I | 12 | 20 | 3 | No |
 | COMPLEX | 3W + L + 3 + I | 24 | 40 | 3 | No |
+
+**Bands and caps (scored units).** Use this table instead when `unitMarkers.scoringV2` is set. The
+min is the same as above. Only the max changes.
+
+| Class | Target formula | Min | Max | Test Types cap | Anchor rule |
+|---|---|---|---|---|---|
+| SIMPLE | 3 + I | 4 | 6 | 4 | Yes |
+| MEDIUM | 2W + 1 + I | 6 | 20 | 4 | Yes |
+| HIGH | 2W + L + 2 + I | 12 | 24 | 3 | No |
+| COMPLEX | 3W + L + 3 + I | 24 | 32 | 3 | No |
 
 In HIGH and COMPLEX stories, Edge, Boundary, Stress and Exploratory may stand alone in a test case.
 
@@ -538,7 +570,8 @@ Fix what you can. Name each rule you could not fix in Generation Warnings.
   `EXPLORATORY` and interaction cases `INTERACTION`; both must still trace to at least one
   REQ/BR/VR/approved source and appear in the Traceability Matrix — they are mandatory coverage
   now, not advisory-only.
-- **Expand feature-interaction outlines (strict 1:1)**: for every `INT-###` row in the `analysis.md`
+- **Expand feature-interaction outlines (units that are not scored: strict 1:1)**: for every
+  `INT-###` row in the `analysis.md`
   **Feature Interaction Analysis** table, author exactly one interaction test case (one test case per
   `INT-###`, one `Interaction Ref` per test case). Set `Test Types` to include `Interaction`, copy the
   row's classification into `Interaction Type` (one of the twelve values), set `Interaction Ref` to the
@@ -546,7 +579,19 @@ Fix what you can. Name each rule you could not fix in Generation Warnings.
   `Purpose` from the row's Objective, `Pre-requisite` from its Pre-conditions, and the `Steps` from its
   Interaction Steps / Expected Result (expanded to the 6–18 step discipline below). Write these three
   fields at line start with no bold markers (parser-critical, like `Name:`). This carry-through is
-  **advisory**: a missing expansion never FAILs Gate 2 (see Step 3).
+  **advisory**: a missing expansion never FAILs Gate 2 (see Step 3). Do not write `Partner Steps:`.
+- **Interaction cases (scored units)**: write one interaction case for each `INT-###` row with Owner
+  `This story`, the same way as above. Rows with Owner `Covered by` or `Deferred to` get no test
+  case in this story. Their requirement's Interaction cell says `REF INT-###` in the analysis.
+  - Add `Partner Steps:` at line start, right after `Existing Feature(s):`. List the test step
+    numbers that use the partner feature, for example `Partner Steps: 7, 9`. List test steps only,
+    never setup steps.
+  - At least one partner step must name the partner feature (the `Existing Feature(s)` value), and
+    at least one expected result must be about it.
+- **Traceability Matrix (scored units)**: for each `REF INT-###` cell in the Coverage Intent Matrix,
+  add a row with the requirement, `Interaction`, the `INT-###` row and its Owner, for example
+  `REQ-004 | Interaction | INT-003 | Covered by CONSIM-6830 TC-023`. The export then shows where the
+  test lives.
 - Test data must be concrete; expected results observable; steps reproducible.
 - **Steps count rule (format 1)**: every test case's `### Steps` table must have **6 to 18 data rows**
   (aim for 6-7; the header and separator rows are not counted).
@@ -612,6 +657,18 @@ the test case, the step, and the LOGIC rule ID.
   number or legacy compare? Is every REQ marked Y for Performance in a Performance case? Does each
   separate Stress case use its row's Stress Volume? If you cannot fix it, count it in
   `logicViolations`.
+- In a scored unit, check the workflow cases: Does any Variant workflow have a test case of its
+  own? Fold it into its parent's cases. Does any FULL inventory row have more than one test case
+  per data split? Fold the values into data rows. If you cannot fix it, count it in
+  `logicViolations`.
+- In a scored unit, check each interaction case: does at least one step use the partner feature,
+  and does at least one expected result say what happens to it? A case that only touches this
+  story's feature is not an interaction test. Fold it into the matching Functional case: add
+  `Interaction` to that case's Test Types, move the `Interaction Ref:` and `Existing Feature(s):`
+  lines into it, add at least one step that uses the partner feature, and list that step in
+  `Partner Steps:`. Then remove the empty interaction case. The fold is not a merge: the rule
+  "never merge Interaction test cases" still holds. If you cannot fix it, count it in
+  `logicViolations`.
 
 ## Step 3 — Run Gate 2
 
@@ -656,6 +713,26 @@ Interpret the status:
   row, or ask the user to approve with a reason.
 - "Performance Targets has no REQ-### row" (FAIL): fix the ID in `Performance Target:`.
 - "no test step uses the test data" (FAIL): add a step that uses the row's test data name.
+
+**Functional count (scored units).** "N Functional test cases for W user workflows"
+(CONDITIONAL_PASS): check for Functional cases that only repeat a Variant workflow or one value of
+a data list. Fold them into the parent case as steps or data rows. If each case is a real, separate
+user procedure, ask the user to approve with a reason.
+
+**Interaction cases (scored units).** Gate 2 checks owned interaction cases and reference cells:
+
+- "INT-### is owned by this story. Write its test case." (FAIL): the analysis says `REF INT-###`,
+  but that row has Owner `This story`. Write its test case, and ask for the cell to be changed to
+  `Y` in the analysis.
+- "is an interaction test case with no Partner Steps line" (FAIL): add the `Partner Steps:` line.
+- "lists step N in Partner Steps, but Test Steps has no step N" (FAIL): fix the number. Use test
+  step numbers only.
+- "no partner step in TC-### names ..." (CONDITIONAL_PASS): name the partner feature in a listed
+  step, or ask the user to approve with a reason.
+- "says Covered by ..., but that case is deprecated" or "was not found" (CONDITIONAL_PASS): write
+  the case in this story, or point to the new case in the analysis.
+- "Could not check INT-###" (CONDITIONAL_PASS): run `git fetch origin` and run the gate again, or
+  ask the user to approve with a reason.
 
 **Feature-interaction carry-through (advisory)**: Gate 2 also runs an advisory `reference_chain` that
 checks every `INT-###` row in `analysis.md` is referenced by an `Interaction Ref` in `test-cases.md`

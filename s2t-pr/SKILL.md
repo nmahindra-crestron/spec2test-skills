@@ -269,6 +269,15 @@ git push -u origin s2t/<slug>
 
 - `gh pr create --base <target> --head s2t/<slug> --title "<slug>: test cases for review" --body "<short summary>"`.
   Open it ready for review, never as a draft.
+- If `analysis.md` has a `Class Confirmed:` line, add one class line to the body, after the short
+  summary. Read the class from `Complexity Class:`, the counts from the Logic and Breadth rows of
+  the Story Complexity Assessment, and the answer from the CLR row that `Class Confirmed:` names in
+  `clarifications.md`:
+  - For a Y answer: `Class: <class> (<n> business rules, <n> user workflows). Confirmed: Yes.`
+  - For an N answer: `Class: <class> (<n> business rules, <n> user workflows). Confirmed: No, <reason>.`
+    The reason is the text after the class in the Answer.
+  - If `Raised Class:` is not `None`, end the line with `Raised to <class>.`
+  A unit with no `Class Confirmed:` line gets no class line.
 - If the reviewer list is empty, skip adding reviewers and continue.
 - For each reviewer: `gh pr edit <number> --add-reviewer <handle>`.
 - Record the PR URL, number and head commit (`git rev-parse HEAD`). On a `gh` error, show it and
