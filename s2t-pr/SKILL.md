@@ -232,24 +232,22 @@ Then stop. Keep the result: step 7 needs `fingerprints["test-cases.md"]`.
 ## Step 3 — Ask for reviewers
 
 Ask the tester for the reviewers, each as a Name and a GitHub handle. You may suggest owners from
-`CODEOWNERS`, but the tester must confirm each one. An empty reviewer list is allowed for this
-temporary no-reviewer workflow; do not ask again. Check the list, and ask again on any problem:
+`CODEOWNERS`, but the tester must confirm each one. Check the list, and ask again on any problem:
 Follow the Agent Question Rules in the writing standard: one short, plain question at a time.
 
 - A handle listed twice → "<handle> is listed twice."
 - The submitter's handle → "You opened this PR, so you can't review it."
 - No access: `gh api repos/{owner}/{repo}/collaborators/{handle}` fails → "<handle> has no access to
   this repo."
-- An empty list → continue with no reviewers; this is allowed temporarily.
+- An empty list → ask again; there is nobody to add.
 
 Do not check how many reviewers there are. The review gate checks the count and reports it.
 
 ## Step 4 — Required reviewers and target branch
 
-Ask which reviewers are required (Yes/No each), and the target branch. If the reviewer list is
-empty, skip the required-reviewers question and continue. The default target is the repo's default
-branch (`gh repo view --json defaultBranchRef --jq .defaultBranchRef.name`). Follow the Agent
-Question Rules in the writing standard: one short, plain question at a time.
+Ask which reviewers are required (Yes/No each), and the target branch. The default target is the
+repo's default branch (`gh repo view --json defaultBranchRef --jq .defaultBranchRef.name`).
+Follow the Agent Question Rules in the writing standard: one short, plain question at a time.
 
 ## Step 5 — Commit and push the unit's markdown files
 
@@ -278,7 +276,6 @@ git push -u origin s2t/<slug>
     The reason is the text after the class in the Answer.
   - If `Raised Class:` is not `None`, end the line with `Raised to <class>.`
   A unit with no `Class Confirmed:` line gets no class line.
-- If the reviewer list is empty, skip adding reviewers and continue.
 - For each reviewer: `gh pr edit <number> --add-reviewer <handle>`.
 - Record the PR URL, number and head commit (`git rev-parse HEAD`). On a `gh` error, show it and
   stop.
@@ -289,8 +286,9 @@ git push -u origin s2t/<slug>
 - `pr-review.md`: fill `assets/pr-review-template.md`:
   - `Test Cases Fingerprint:` = `fingerprints["test-cases.md"]` from step 1;
   - `Status: OPEN`, `Review Round: 1`, `Submitter:` = the handle from step 2;
-  - one Reviewers row per reviewer, with `Required` Yes/No and `Decision` `PENDING`;
-  - one Status History row: now (UTC ISO), `—` → `OPEN`, Round 1, Note `PR created`.
+  - one Reviewers row per reviewer, with `Required` Yes/No, `Decision` `PENDING` and `Decided At` `—`;
+  - one Status History row: now (UTC ISO), `—` → `OPEN`, Round 1, Note `PR created`, `By` = the
+    submitter's handle.
 
 ## Final self-review (required)
 
@@ -304,10 +302,24 @@ Count the rule breaks you could not fix.
 - `persist_artifact` with `stageId: "review"` and the `pr-review.md` content.
 - `persist_artifact` with `stageId: "review"`, `artifact: "review-comments.md"` and its content.
 
-## Step 9 — Run the review gate
+## Step 9 — Commit and push the review files
 
-Call `check_gate` with `stageId: "review"`. While the PR is still open, a FAIL is expected. After
-it is merged, a CONDITIONAL_PASS is expected if nobody approved. Tell the tester: "PR opened with no reviewers. Merge it yourself, then run `/s2t-rework`." If the gate names a problem other than the status or approvals (for example the reviewer count), report it as well.
+```
+git add -- .spec2test/changes/<slug>/pr-review.md .spec2test/changes/<slug>/review-comments.md
+git commit -m "s2t: <slug> review files"
+git push
+```
+
+- Commit only these two files. Never commit `state.json` or `export/`.
+- If any git command fails, show its error and stop. If the push failed, also tell the tester: "Fix
+  the problem, then run `git push`." Do not retry.
+- Do not change `Head Commit:`. It stays the commit from step 6.
+
+## Step 10 — Run the review gate
+
+Call `check_gate` with `stageId: "review"`. A FAIL is expected now: nobody has approved yet. Tell
+the tester: "PR opened. Wait for reviews, then run `/s2t-rework`." If the gate names a problem other
+than the status or approvals (for example the reviewer count), report it as well.
 
 ## Rules
 
@@ -317,5 +329,6 @@ it is merged, a CONDITIONAL_PASS is expected if nobody approved. Tell the tester
 - Commit only `.spec2test/changes/<slug>/*.md`. Never commit `export/`.
 - The reviewer limits and the approval count live only in the review gate. Report what
   `check_gate` says; do not repeat or invent numbers.
-- During this temporary no-reviewer workflow, the tester can confirm the warning after self-merging.
+- Never merge or close the PR.
+- `approve_gate` cannot pass a failed review gate. Only approvals on the PR can.
 

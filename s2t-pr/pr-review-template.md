@@ -13,12 +13,12 @@ Submitter: <submitter-handle>
 
 ## Reviewers
 
-| Name | Handle | Required | Decision |
-|------|--------|----------|----------|
-| <reviewer-name> | <reviewer-handle> | <Yes-or-No> | PENDING |
+| Name | Handle | Required | Decision | Decided At |
+|------|--------|----------|----------|------------|
+| <reviewer-name> | <reviewer-handle> | <Yes-or-No> | PENDING | — |
 
 ## Status History
 
-| At | From | To | Round | Note |
-|----|------|----|-------|------|
-| <utc-iso-timestamp> | — | OPEN | 1 | PR created |
+| At | From | To | Round | Note | By |
+|----|------|----|-------|------|----|
+| <utc-iso-timestamp> | — | OPEN | 1 | PR created | <submitter-handle> |

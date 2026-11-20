@@ -238,9 +238,18 @@ If any answer is No, rewrite that part. Count the rule breaks you could not fix.
 Read `pr-review.md` in the active work unit. If it is missing, say "Run `/s2t-pr` first." and stop.
 Note the PR number, the branch, the Status and the Reviewers table.
 
+Then read the PR state: `gh pr view <number> --json state --jq .state`. If it is `MERGED` or
+`CLOSED`, say "PR #<number> is already <state>. `/s2t-rework` works only on an open PR." and stop.
+Change no file, make no commit or push, and post nothing.
+
 ## Step 2 — Push local changes
 
-If any `.spec2test/changes/<slug>/*.md` file changed since the last push:
+First, read the PR state again: `gh pr view <number> --json state --jq .state`. Step 14 runs this
+step later in the same run, and the PR may have changed. If it is `MERGED` or `CLOSED`, do not
+commit, push or re-request review. Say "PR #<number> is already <state>. `/s2t-rework` works only
+on an open PR." and stop.
+
+If the PR is `OPEN` and any `.spec2test/changes/<slug>/*.md` file changed since the last push:
 
 ```
 git add -- .spec2test/changes/<slug>/*.md
@@ -266,8 +275,9 @@ Use `assets/status-map.md`:
 - **PR Status**: the first row that matches `state`, `isDraft` and `reviewDecision` gives `Status:`.
 - **Reviewer Decision**: for each Reviewers row, take that handle's latest review and map its state.
   A reviewer with no review yet is `PENDING`.
-- If the review gate result is `CONDITIONAL_PASS` because nobody approved, show "No reviewer approved
-  this pull request. Continue anyway?". On Yes, record the approval with today's date. On No, stop.
+- **Decided At**: for each Reviewers row, the `submittedAt` of that handle's latest review (UTC
+  ISO). A reviewer with no review yet keeps `—`. If the table has no `Decided At` column, add it as
+  the last column.
 
 ## Step 5 — Update the commit and fingerprint
 
@@ -281,12 +291,22 @@ Use the same checks as `/s2t-pr` step 3: no duplicates ("<handle> is listed twic
 submitter ("You opened this PR, so you can't review it."), and the handle must have repo access.
 Run `gh pr edit <number> --remove-reviewer <old> --add-reviewer <new>`, update the Reviewers row,
 and add a Status History row: From and To are the current Status, and the Note names the change
-(for example `Replaced jdoe with asmith`).
+(for example `Replaced jdoe with asmith`). The new Reviewers row gets `Decided At` `—`, and the
+Status History row gets `By` = the handle of the person running this step
+(`gh api user --jq .login`).
 
 ## Step 7 — Status History
 
 Add a Status History row only when Status changed: now (UTC ISO), the old Status, the new Status,
 the current Review Round, and a short Note. If Status did not change, add no row.
+
+Fill `By` on each new row:
+
+- to `APPROVED`: the handles whose Decision is `APPROVED`, separated by ", ";
+- to `CHANGES_REQUESTED`: the handles whose Decision is `CHANGES_REQUESTED`;
+- any other change: `—`.
+
+If the table has no `By` column, add it as the last column and put `—` in the old rows.
 
 ## Step 8 — Capture comments
 
@@ -312,7 +332,7 @@ Always start the text with `[RC-xxx] `.
 - On success, set `Reply Posted: Yes`.
 - On failure, keep `No`, show the error, and go on with the next row.
 
-Replies queued in step 10 are posted by step 9 of the next run.
+Step 11 posts the replies that Step 10 queues, in the same run.
 
 ## Step 10 — Triage
 
@@ -373,6 +393,8 @@ Count the rule breaks you could not fix.
 
 ## Step 11 — Save and run the gate
 
+- Post every triage row with `Reply Posted: No`, as Step 9 says. A row that is already `Yes` is
+  never posted again. Then save.
 - Call `validate_output` (`skillId: "s2t-rework"`) on `pr-review.md`. Fix any violation first.
 - `persist_artifact` with `stageId: "review"`, `force: true` and the `pr-review.md` content.
 - `persist_artifact` with `stageId: "review"`, `artifact: "review-comments.md"`, `force: true`.
@@ -393,7 +415,7 @@ If any comment has a Decision that changes a stage file, and no rework round is 
 If a round is already open, do not open a second one. New comments wait for the next round.
 If `reopen_unit` rejects the call, show its message and stop.
 
-If no round is open now, go to Step 15. Otherwise, go to Step 13.
+If no round is open now, go to Step 14A. Otherwise, go to Step 13.
 
 ## Step 13 — Apply the comments
 
@@ -447,9 +469,38 @@ Run this step even when no stage file changed (for example, every comment is now
 
 Then go to Step 15.
 
+## Step 14A — Hand off the approved PR
+
+Run this step only from Step 12. Never merge or close the PR.
+
+1. **Gate.** If the review gate in Step 11 did not give PASS, go to Step 15.
+2. **Approval of the latest tests.** Find the last commit that changed the tests:
+   `git log -1 --format=%H -- .spec2test/changes/<slug>/test-cases.md`. Read the reviews:
+   `gh pr view <number> --json latestReviews`. Go on only if an entry has state `APPROVED` and
+   `git merge-base --is-ancestor <tests commit> <commit.oid>` succeeds. Otherwise go to Step 15.
+3. **Push the review files.** Do the state check from Step 2. If no unit `.md` file changed since
+   the last commit, skip the push. Otherwise:
+
+   ```
+   git add -- .spec2test/changes/<slug>/*.md
+   git commit -m "s2t: <slug> approved review files"
+   git push
+   ```
+
+   Do not change `Head Commit:`. Do not re-request review. If a git command fails, show its error
+   and say "Fix the problem, then run `git push`." Do not retry.
+
+Then go to Step 15.
+
 ## Step 15 — Report
 
-- PASS: "Review gate passed. Next: `/s2t-hydrate`."
+- After Step 14A pushed, or found nothing to push: "Review gate passed. Stay on this branch and run
+  `/s2t-hydrate`."
+- If Step 14A found no approval of the latest tests: "No reviewer has approved the latest test cases
+  yet. Ask a reviewer to approve again, then run `/s2t-rework`."
+- CONDITIONAL_PASS: "The review gate has warnings: <checks>. Fix them, then run `/s2t-rework`
+  again."
+- Say "Review gate passed" in no other case.
 - FAIL: report the PR status, the new comment count, and the approval count the gate reports, for
   example "No new comments. 0 of 1 approvals." Take the numbers from `check_gate`; do not invent
   them.
@@ -495,6 +546,6 @@ Never set a lesson to `ADOPTED` or `REJECTED`. The tester decides.
 - Push only `.spec2test/changes/<slug>/*.md`. Never commit `export/`.
 - The reviewer limits and the approval count live only in the review gate. Report what
   `check_gate` says.
-- During this temporary no-reviewer workflow, a `CONDITIONAL_PASS` warning can be confirmed by the
-  tester after self-merging.
+- Never merge or close the PR. The team merges it on GitHub after the pipeline.
+- `approve_gate` cannot pass a failed review gate. Only approvals on the PR can.
 
